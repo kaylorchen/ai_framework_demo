@@ -39,9 +39,7 @@ class ThreadPool {
 // the constructor just launches some amount of workers
 inline ThreadPool::ThreadPool(size_t threads) : stop(false) {
   for (size_t i = 0; i < threads; ++i)
-    workers.emplace_back([this, i] {
-      auto thread_name = "thread_" + std::to_string(i);
-      pthread_setname_np(pthread_self(), thread_name.c_str());
+    workers.emplace_back([this] {
       for (;;) {
         std::function<void()> task;
 

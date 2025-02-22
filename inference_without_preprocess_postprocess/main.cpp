@@ -24,6 +24,8 @@ int main(int argc, char *argv[]) {
 #define INSTANCE TensorRT
 #elif defined(NNRT)
 #define INSTANCE Nnrt
+#elif defined(RK3588)
+#define INSTANCE Rk3588
 #endif
   auto instance = std::make_shared<INSTANCE>();
   instance->Initialize(model_path.c_str());

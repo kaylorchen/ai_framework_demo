@@ -1,20 +1,17 @@
 //
 // Created by kaylor on 7/10/24.
 //
-#include "common/ai_framework.h"
+#include "ai_framework.h"
 #include "image_process/depth_anything/depth_imageprocess.h"
 #include "kaylordut/log/logger.h"
-#ifdef TRT
-#include "common/platform/tensorrt/tensorrt.h"
-#endif
-#ifdef ONNX
-#include "common/platform/onnxruntime/onnxruntime.h"
-#endif
-#ifdef RK3588
-#include "common/platform/rockchip/rk3588.h"
-#endif
-#ifdef NNRT
-#include "common/platform/nnrt/nnrt.h"
+#if defined(TRT)
+#include "platform/tensorrt/tensorrt.h"
+#elif defined(ONNX)
+#include "platform/onnxruntime/onnxruntime.h"
+#elif defined(RK3588)
+#include "platform/rockchip/rk3588.h"
+#elif defined(NNRT)
+#include "platform/nnrt/nnrt.h"
 #endif
 #include "kaylordut/time/time.h"
 #include "yaml-cpp/yaml.h"
@@ -23,7 +20,7 @@ int main(int argc, char **argv) {
   YAML::Node config = YAML::LoadFile("../config/depth_anything.yaml");
   auto model_path = config["model_path"].as<std::string>();
   int input_size = config["input_size"].as<int>();
-  cv::VideoCapture capture(2, cv::CAP_V4L2);
+  cv::VideoCapture capture(0, cv::CAP_V4L2);
   if (!capture.isOpened()) {
     KAYLORDUT_LOG_ERROR("Cannot open /dev/video{}", 0);
     exit(1);

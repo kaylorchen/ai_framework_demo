@@ -1,17 +1,17 @@
 //
 // Created by kaylor on 7/10/24.
 //
-#include "common/ai_framework.h"
+#include "ai_framework.h"
 #include "image_process/depth_anything/depth_imageprocess.h"
 #include "kaylordut/log/logger.h"
-#ifdef TRT
+#if defined(TRT)
 #include "platform/tensorrt/tensorrt.h"
-#endif
-#ifdef ONNX
+#elif defined(ONNX)
 #include "platform/onnxruntime/onnxruntime.h"
-#endif
-#ifdef RK3588
+#elif defined(RK3588)
 #include "platform/rockchip/rk3588.h"
+#elif defined(NNRT)
+#include "platform/nnrt/nnrt.h"
 #endif
 #include "kaylordut/time/time.h"
 #include "yaml-cpp/yaml.h"
@@ -21,12 +21,14 @@ int main(int argc, char **argv) {
   auto model_path = config["model_path"].as<std::string>();
   auto image_path = config["image_path"].as<std::string>();
   int input_size = config["input_size"].as<int>();
-#ifdef TRT
+#if defined(TRT)
   auto ai_instance = std::make_shared<TensorRT>();
-#elif ONNX
+#elif defined(ONNX)
   auto ai_instance = std::make_shared<OnnxRuntime>();
-#elif RK3588
+#elif defined(RK3588)
   auto ai_instance = std::make_shared<Rk3588>(true);
+#elif defined(NNRT)
+  auto ai_instance = std::make_shared<Nnrt>();
 #endif
   ai_instance->Initialize(model_path.c_str());
   ai_instance->PrintLayerInfo();

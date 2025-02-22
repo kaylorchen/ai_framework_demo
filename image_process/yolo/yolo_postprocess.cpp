@@ -398,7 +398,7 @@ uint16_t YoloPostProcess::ProcessPose(const float *box_tensor,
       int offset = i * grid_w + j;
       float max_score = 0;
       int max_class_id = -1;
-      for (int k = 0; k < conf_threshold_->size(); ++k) {
+      for (size_t k = 0; k < conf_threshold_->size(); ++k) {
         if (score_tensor[offset] > conf_threshold_->at(k) &&
             score_tensor[offset] > max_score) {
           max_score = score_tensor[offset];
@@ -484,7 +484,7 @@ uint16_t YoloPostProcess::ProcessDetect(const void *box_tensor,
                        scale_.at(index * output_per_branch + 1))
                  : 0;
       int max_class_id = -1;
-      for (int k = 0; k < conf_threshold_->size(); ++k) {
+      for (size_t k = 0; k < conf_threshold_->size(); ++k) {
         if (model_format_ == ModelFormat::ONNX_FORMAT ||
             model_format_ == ModelFormat::TRT_FORMAT ||
             model_format_ == ModelFormat::NNRT_FORMAT) {

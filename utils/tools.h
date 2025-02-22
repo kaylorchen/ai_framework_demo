@@ -19,3 +19,5 @@ cv::Mat GetImageResult(const cv::Mat &original_image,
 void AddWeightedSegment(cv::Mat &image, const cv::Mat &seg_mat, int id);
 
 std::vector<std::string> ReadLabelsFromTextFile(const std::string &filename);
+void CoordinateTransformation(float &x, float &y, int width, int height,
+                              int target_side_length);

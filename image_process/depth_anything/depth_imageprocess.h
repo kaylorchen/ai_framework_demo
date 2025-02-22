@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "common/ai_framework.h"
+#include "ai_framework.h"
 #include "opencv2/opencv.hpp"
 class DepthImageprocess {
  public:

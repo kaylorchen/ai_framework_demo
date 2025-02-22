@@ -49,7 +49,7 @@ YoloThreadpool::YoloThreadpool(std::string &model_path,
     }
 #endif
     KAYLORDUT_LOG_INFO("number of instances is {}", this->instances_.size());
-    for (int i = 0; i < instances_.size(); ++i) {
+    for (size_t i = 0; i < instances_.size(); ++i) {
       tensors_data_.push_back(std::make_shared<ai_framework::TensorData>(
           instances_.at(i)->get_config()));
       auto it = instances_.at(i)->get_config().input_layer_shape.begin();
@@ -70,7 +70,8 @@ YoloThreadpool::YoloThreadpool(std::string &model_path,
 
 void YoloThreadpool::AddInferenceTask(
     const std::vector<cv::Mat> &original_image, const double time_stamp,
-    const bool clone_original_image) {
+    const bool clone_original_image,
+    const std::vector<cv::Mat> &original_depth_image) {
   //  std::vector<cv::Mat> image;
   //  if (clone_original_image) {
   //    for (int i = 0; i < original_image.size(); ++i) {
@@ -80,9 +81,11 @@ void YoloThreadpool::AddInferenceTask(
   //    image = original_image;
   //  }
   auto &image = original_image;
+  auto &depth_image = original_depth_image;
   // lamda表达式传入参数需要使用值，不能使用引用，这里使用cv的智能指针，image可以获取保留数据的指针，如果使用引用的话，指向的数据会发生变化
   this->pool_->enqueue(
-      [&](const std::vector<cv::Mat> image, const double time_stamp) {
+      [&](const std::vector<cv::Mat> image,
+          const std::vector<cv::Mat> depth_image, const double time_stamp) {
         auto id = this->get_thread_id();
         std::lock_guard<std::mutex> lock_threads(this->threads_mutex_[id]);
         this->yolo_preprocess_.at(id)->Run(
@@ -96,6 +99,7 @@ void YoloThreadpool::AddInferenceTask(
           if (time_stamp <= yolo_inference_result_queue_.back()->time_stamp) {
             KAYLORDUT_LOG_WARN(
                 "current time stamp is too old, drop the result");
+            drop_count_++;
             return;
           }
         }
@@ -103,9 +107,12 @@ void YoloThreadpool::AddInferenceTask(
         res->time_stamp = time_stamp;
         res->original_image = image;
         res->results = this->yolo_postprocess_.at(id)->get_result();
+        if (!depth_image.empty()) {
+          res->original_depth_image_ = depth_image;
+        }
         yolo_inference_result_queue_.push(res);
       },
-      image, time_stamp);
+      image, depth_image, time_stamp);
 }
 
 std::shared_ptr<YoloThreadpool::YoloInferenceResult>
@@ -116,7 +123,7 @@ YoloThreadpool::GetInferenceResult() {
   } else {
     auto res = this->yolo_inference_result_queue_.front();
     this->yolo_inference_result_queue_.pop();
-    return std::move(res);
+    return res;
   }
 }
 
