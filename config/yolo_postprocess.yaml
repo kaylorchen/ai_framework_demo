@@ -1,0 +1,160 @@
+person:
+  confidence_threshold: 0.4
+bicycle:
+  confidence_threshold: 0.6
+car:
+  confidence_threshold: 0.6
+motorcycle:
+  confidence_threshold: 0.6
+airplane:
+  confidence_threshold: 0.6
+bus:
+  confidence_threshold: 0.6
+train:
+  confidence_threshold: 0.6
+truck:
+  confidence_threshold: 0.6
+boat:
+  confidence_threshold: 0.6
+traffic_light:
+  confidence_threshold: 0.6
+fire_hydrant:
+  confidence_threshold: 0.6
+stop_sign:
+  confidence_threshold: 0.6
+parking_meter:
+  confidence_threshold: 0.6
+bench:
+  confidence_threshold: 0.6
+bird:
+  confidence_threshold: 0.6
+cat:
+  confidence_threshold: 0.6
+dog:
+  confidence_threshold: 0.6
+horse:
+  confidence_threshold: 0.6
+sheep:
+  confidence_threshold: 0.6
+cow:
+  confidence_threshold: 0.6
+elephant:
+  confidence_threshold: 0.6
+bear:
+  confidence_threshold: 0.6
+zebra:
+  confidence_threshold: 0.6
+giraffe:
+  confidence_threshold: 0.6
+backpack:
+  confidence_threshold: 0.6
+umbrella:
+  confidence_threshold: 0.6
+handbag:
+  confidence_threshold: 0.6
+tie:
+  confidence_threshold: 0.6
+suitcase:
+  confidence_threshold: 0.6
+frisbee:
+  confidence_threshold: 0.6
+skis:
+  confidence_threshold: 0.6
+snowboard:
+  confidence_threshold: 0.6
+sports_ball:
+  confidence_threshold: 0.6
+kite:
+  confidence_threshold: 0.6
+baseball_bat:
+  confidence_threshold: 0.6
+baseball_glove:
+  confidence_threshold: 0.6
+skateboard:
+  confidence_threshold: 0.6
+surfboard:
+  confidence_threshold: 0.6
+tennis_racket:
+  confidence_threshold: 0.6
+bottle:
+  confidence_threshold: 0.6
+wine_glass:
+  confidence_threshold: 0.6
+cup:
+  confidence_threshold: 0.6
+fork:
+  confidence_threshold: 0.6
+knife:
+  confidence_threshold: 0.6
+spoon:
+  confidence_threshold: 0.6
+bowl:
+  confidence_threshold: 0.6
+banana:
+  confidence_threshold: 0.6
+apple:
+  confidence_threshold: 0.6
+sandwich:
+  confidence_threshold: 0.6
+orange:
+  confidence_threshold: 0.6
+broccoli:
+  confidence_threshold: 0.6
+carrot:
+  confidence_threshold: 0.6
+hot_dog:
+  confidence_threshold: 0.6
+pizza:
+  confidence_threshold: 0.6
+donut:
+  confidence_threshold: 0.6
+cake:
+  confidence_threshold: 0.6
+chair:
+  confidence_threshold: 0.6
+couch:
+  confidence_threshold: 0.6
+potted_plant:
+  confidence_threshold: 0.6
+bed:
+  confidence_threshold: 0.6
+dining_table:
+  confidence_threshold: 0.6
+toilet:
+  confidence_threshold: 0.6
+tv:
+  confidence_threshold: 0.6
+laptop:
+  confidence_threshold: 0.6
+mouse:
+  confidence_threshold: 0.6
+remote:
+  confidence_threshold: 0.6
+keyboard:
+  confidence_threshold: 0.6
+cell_phone:
+  confidence_threshold: 0.6
+microwave:
+  confidence_threshold: 0.6
+oven:
+  confidence_threshold: 0.6
+toaster:
+  confidence_threshold: 0.6
+sink:
+  confidence_threshold: 0.6
+refrigerator:
+  confidence_threshold: 0.6
+book:
+  confidence_threshold: 0.6
+clock:
+  confidence_threshold: 0.6
+vase:
+  confidence_threshold: 0.6
+scissors:
+  confidence_threshold: 0.6
+teddy_bear:
+  confidence_threshold: 0.6
+hair_drier:
+  confidence_threshold: 0.6
+toothbrush:
+  confidence_threshold: 0.6

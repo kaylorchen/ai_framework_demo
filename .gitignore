@@ -1,0 +1,7 @@
+cmake-build-*
+build/
+*.trt
+depth_anything*.rknn
+yolo*l.*
+yolo*x.*
+yolo*m.*

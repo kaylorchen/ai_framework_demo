@@ -1,0 +1,42 @@
+cmake_minimum_required(VERSION 3.22)
+project(ai_framework_demo)
+find_package(yaml-cpp REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(kaylordut REQUIRED)
+
+
+set(INC ${OpenCV_INCLUDE_DIRS})
+set(LINKS ${YAML_CPP_LIBRARIES} ${OpenCV_LIBS} ${kaylordut_LIBS})
+
+find_package(ai_instance_tensorrt QUIET)
+if (ai_instance_tensorrt_FOUND)
+    message(STATUS "Found ai_instance_tensorrt")
+    set(AI_LIB ${ai_instance_tensorrt_LIBS})
+else ()
+    find_package(ai_instance_onnx QUIET)
+    if (ai_instance_onnx_FOUND)
+        message(STATUS "Found ai_instance_onnx")
+        set(AI_LIB ${ai_instance_onnx_LIBS})
+    endif ()
+endif ()
+message(STATUS "AI_LIB is ${AI_LIB}")
+
+
+include_directories(./)
+include_directories(INC)
+include_directories(./common)
+
+add_subdirectory(image_process)
+file(GLOB_RECURSE UTILS "utils/*.cpp")
+
+add_executable(yolo_mutilthreading_demo mutilthreading/mutilthreading_demo.cpp ${UTILS})
+target_link_libraries(yolo_mutilthreading_demo ${LINKS} ${AI_LIB} yolo_postprocess yolo_preprocess)
+
+add_executable(depth_demo depth_anything/depth_demo.cpp)
+target_link_libraries(depth_demo depth_image_process  ${LINKS} ${AI_LIB})
+
+add_executable(depth_camera_demo depth_anything/depth_camera_demo.cpp)
+target_link_libraries(depth_camera_demo depth_image_process ${LINKS} ${AI_LIB})
+
+add_executable(inference_test inference_without_preprocess_postprocess/main.cpp)
+target_link_libraries(inference_test ${LINKS} ${AI_LIB})
