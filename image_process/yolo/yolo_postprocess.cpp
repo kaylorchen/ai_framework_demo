@@ -284,7 +284,7 @@ void YoloPostProcess::PostProcessDetectSegment(void **&tensors) {
     }
   }
   for (int i = 0; i < validCount; ++i) {
-    int n;
+    int n = i;
     Result res;
     if (model_type_ == ModelType::DETECTION_V8 ||
         model_type_ == ModelType::DETECTION_V11 ||

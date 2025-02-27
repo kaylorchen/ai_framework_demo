@@ -36,6 +36,8 @@ class YoloThreadpool {
 
   std::shared_ptr<YoloThreadpool::YoloInferenceResult> GetInferenceResult();
 
+  int get_result_queue_size();
+
   int get_task_size() const { return this->pool_->TasksSize(); }
 
   const uint32_t &get_drop_count() const { return drop_count_; }

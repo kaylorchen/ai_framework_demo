@@ -127,6 +127,11 @@ YoloThreadpool::GetInferenceResult() {
   }
 }
 
+int YoloThreadpool::get_result_queue_size() {
+  std::lock_guard<std::mutex> lock(this->result_mutex_);
+  return this->yolo_inference_result_queue_.size();
+}
+
 int YoloThreadpool::get_thread_id() {
   std::lock_guard<std::mutex> lock(id_mutex_);
   auto id = id_;
