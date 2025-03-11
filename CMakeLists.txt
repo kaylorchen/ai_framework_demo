@@ -52,6 +52,9 @@ file(GLOB_RECURSE UTILS "utils/*.cpp")
 add_executable(yolo_mutilthreading_demo mutilthreading/mutilthreading_demo.cpp ${UTILS})
 target_link_libraries(yolo_mutilthreading_demo ${LINKS} ${AI_LIB} yolo_postprocess yolo_preprocess)
 
+add_executable(jialin_demo mutilthreading/jialin_demo.cpp ${UTILS})
+target_link_libraries(jialin_demo ${LINKS} ${AI_LIB} yolo_postprocess yolo_preprocess)
+
 add_executable(depth_demo depth_anything/depth_demo.cpp)
 target_link_libraries(depth_demo depth_image_process  ${LINKS} ${AI_LIB})
 

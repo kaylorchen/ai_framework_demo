@@ -1,0 +1,6 @@
+left:
+  confidence_threshold: 0.9
+right:
+  confidence_threshold: 0.9
+mid:
+  confidence_threshold: 0.7
