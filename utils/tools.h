@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "chrono"
 #include "image_process/yolo/yolo_postprocess.h"
 #include "opencv2/opencv.hpp"
 void ShowResults(const cv::Mat &original_image, const int target_side_length,
@@ -21,3 +22,5 @@ void AddWeightedSegment(cv::Mat &image, const cv::Mat &seg_mat, int id);
 std::vector<std::string> ReadLabelsFromTextFile(const std::string &filename);
 void CoordinateTransformation(float &x, float &y, int width, int height,
                               int target_side_length);
+
+double get_current_time();

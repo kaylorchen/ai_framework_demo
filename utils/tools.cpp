@@ -282,3 +282,9 @@ std::vector<std::string> ReadLabelsFromTextFile(const std::string &filename) {
   }
   return labels;
 }
+
+double get_current_time() {
+  auto now = std::chrono::system_clock::now();
+  auto duration = now.time_since_epoch();
+  return std::chrono::duration<double>(duration).count();
+}

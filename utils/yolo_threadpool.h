@@ -16,11 +16,12 @@
 #elif defined(RK3588)
 #include "platform/rockchip/rk3588.h"
 #endif
+#include "condition_variable"
 
 class YoloThreadpool {
  public:
   struct YoloInferenceResult {
-    double time_stamp;
+    std::vector<double> time_points;
     std::vector<cv::Mat> original_image;
     std::vector<cv::Mat> original_depth_image_;
     std::vector<YoloPostProcess::Result> results;
@@ -29,8 +30,8 @@ class YoloThreadpool {
                  int threads = 1);
 
   void AddInferenceTask(const std::vector<cv::Mat> &original_image,
-                        const double time_stamp,
-                        const bool clone_original_image = true,
+                        const std::vector<double> timepoints,
+                        const bool time_points = true,
                         const std::vector<cv::Mat> &original_depth_image =
                             std::vector<cv::Mat>());
 
@@ -45,6 +46,14 @@ class YoloThreadpool {
   const int &get_model_input_side_length() const {
     return yolo_preprocess_.at(0)->get_target_side_length();
   }
+
+  std::mutex &get_result_mutex() { return result_queue_mutex_; }
+
+  std::condition_variable &get_result_condition_variable() {
+    return result_cv_;
+  }
+
+  bool &get_result_ready() { return result_ready_; }
 
  private:
   template <class T>
@@ -74,7 +83,10 @@ class YoloThreadpool {
   std::vector<std::shared_ptr<YoloPreProcess>> yolo_preprocess_;
   std::vector<std::shared_ptr<YoloPostProcess>> yolo_postprocess_;
   std::queue<std::shared_ptr<YoloInferenceResult>> yolo_inference_result_queue_;
+  std::mutex result_queue_mutex_;
   std::mutex result_mutex_;
+  std::condition_variable result_cv_;
+  bool result_ready_{false};
   uint16_t id_{0};
   std::mutex id_mutex_;
   uint32_t drop_count_{0};

@@ -44,7 +44,9 @@ int main(int argc, char** argv){
     auto func = [&] {
       input.at(0) = video_file.GetNextFrame();
       if (!input.at(0).empty()) {
-        yolo_threadpool.AddInferenceTask(input, get_now(), true);
+        std::vector<double> time;
+        time.push_back(get_now());
+        yolo_threadpool.AddInferenceTask(input, time, true);
         ++image_count;
       }
       result = yolo_threadpool.GetInferenceResult();

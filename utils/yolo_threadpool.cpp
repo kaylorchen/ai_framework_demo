@@ -17,6 +17,7 @@
 #ifdef NNRT
 #include "platform/nnrt/nnrt.h"
 #endif
+#include "tools.h"
 
 YoloThreadpool::YoloThreadpool(std::string &model_path,
                                std::vector<float> &conf_threshold,
@@ -69,8 +70,8 @@ YoloThreadpool::YoloThreadpool(std::string &model_path,
 }
 
 void YoloThreadpool::AddInferenceTask(
-    const std::vector<cv::Mat> &original_image, const double time_stamp,
-    const bool clone_original_image,
+    const std::vector<cv::Mat> &original_image,
+    const std::vector<double> timepoints, const bool clone_original_image,
     const std::vector<cv::Mat> &original_depth_image) {
   //  std::vector<cv::Mat> image;
   //  if (clone_original_image) {
@@ -85,7 +86,8 @@ void YoloThreadpool::AddInferenceTask(
   // lamda表达式传入参数需要使用值，不能使用引用，这里使用cv的智能指针，image可以获取保留数据的指针，如果使用引用的话，指向的数据会发生变化
   this->pool_->enqueue(
       [&](const std::vector<cv::Mat> image,
-          const std::vector<cv::Mat> depth_image, const double time_stamp) {
+          const std::vector<cv::Mat> depth_image,
+          const std::vector<double> time_points) {
         auto id = this->get_thread_id();
         std::lock_guard<std::mutex> lock_threads(this->threads_mutex_[id]);
         this->yolo_preprocess_.at(id)->Run(
@@ -94,9 +96,10 @@ void YoloThreadpool::AddInferenceTask(
                                   this->instances_.at(id)->DoInference());
         this->yolo_postprocess_.at(id)->Run(
             this->tensors_data_.at(id)->get_output_tensor_ptr());
-        std::lock_guard<std::mutex> lock(this->result_mutex_);
+        std::unique_lock<std::mutex> lock(this->result_queue_mutex_);
         if (!yolo_inference_result_queue_.empty()) {
-          if (time_stamp <= yolo_inference_result_queue_.back()->time_stamp) {
+          if (time_points.at(0) <=
+              yolo_inference_result_queue_.back()->time_points.at(0)) {
             KAYLORDUT_LOG_WARN(
                 "current time stamp is too old, drop the result");
             drop_count_++;
@@ -104,20 +107,24 @@ void YoloThreadpool::AddInferenceTask(
           }
         }
         auto res = std::make_shared<YoloInferenceResult>();
-        res->time_stamp = time_stamp;
+        res->time_points = time_points;
+        auto now = get_current_time();
+        res->time_points.push_back(now);
         res->original_image = image;
         res->results = this->yolo_postprocess_.at(id)->get_result();
         if (!depth_image.empty()) {
           res->original_depth_image_ = depth_image;
         }
         yolo_inference_result_queue_.push(res);
+        result_ready_ = true;
+        result_cv_.notify_one();
       },
-      image, depth_image, time_stamp);
+      image, depth_image, timepoints);
 }
 
 std::shared_ptr<YoloThreadpool::YoloInferenceResult>
 YoloThreadpool::GetInferenceResult() {
-  std::lock_guard<std::mutex> lock(this->result_mutex_);
+  std::lock_guard<std::mutex> lock(this->result_queue_mutex_);
   if (yolo_inference_result_queue_.empty()) {
     return nullptr;
   } else {
@@ -128,7 +135,7 @@ YoloThreadpool::GetInferenceResult() {
 }
 
 int YoloThreadpool::get_result_queue_size() {
-  std::lock_guard<std::mutex> lock(this->result_mutex_);
+  std::lock_guard<std::mutex> lock(this->result_queue_mutex_);
   return this->yolo_inference_result_queue_.size();
 }
 
