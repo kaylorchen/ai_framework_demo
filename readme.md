@@ -4,7 +4,7 @@ PS: The project only supports Ubuntu 22.04. If you wish to support other systems
 
 ## add my software source
 
-- If your device is RK3588
+- If your device is RK3588 or AiPro
 ```bash
 cat << 'EOF' | sudo tee /etc/apt/sources.list.d/kaylordut.list 
 deb [arch=arm64 signed-by=/etc/apt/keyrings/kaylor-keyring.gpg] http://apt.kaylordut.cn/kaylordut/ kaylordut main
