@@ -37,15 +37,17 @@ YoloPostProcess::YoloPostProcess(const ai_framework::Config &config,
   model_format_ = config.model_format;
   iou_threshold_ = iou_threshold;
   num_of_layers_ = config.output_tensors_count;
-  for (auto &kv : config.output_element_count) {
-    output_layer_names_.push_back(kv.first);
-    output_layer_shape.push_back(config.output_layer_shape.at(kv.first));
-    output_element_count_.push_back(kv.second);
-    if (config.zero_point.find(kv.first) != config.zero_point.end()) {
-      zero_points_.push_back(config.zero_point.at(kv.first));
+  for (size_t i = 0; i < num_of_layers_; ++i) {
+    auto layer = config.output_index_to_name.at(i);
+    KAYLORDUT_LOG_INFO("Post Index = {}, layer name = {}", i, layer);
+    output_layer_names_.push_back(layer);
+    output_layer_shape.push_back(config.output_layer_shape.at(layer));
+    output_element_count_.push_back(config.output_element_count.at(layer));
+    if (config.zero_point.find(layer) != config.zero_point.end()) {
+      zero_points_.push_back(config.zero_point.at(layer));
     }
-    if (config.scale.find(kv.first) != config.scale.end()) {
-      scale_.push_back(config.scale.at(kv.first));
+    if (config.scale.find(layer) != config.scale.end()) {
+      scale_.push_back(config.scale.at(layer));
     }
   }
   conf_threshold_ = &conf_threshold;
@@ -74,6 +76,7 @@ YoloPostProcess::YoloPostProcess(const ai_framework::Config &config,
     KAYLORDUT_LOG_INFO("yolo11_segment resolution: {}x{}", seg_width_,
                        seg_height_);
   }
+  KAYLORDUT_LOG_INFO("ModelType: {}", model_type_);
 }
 
 void YoloPostProcess::Run(void **&tensors) {

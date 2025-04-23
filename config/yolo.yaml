@@ -1,6 +1,9 @@
-model_path: "../model/yolo/yolo11n-seg-local.trt"
+#model_path: "../model/yolo/yolo11n-seg-local.trt"
 #model_path: "../model/yolo/yolo11n-seg.onnx"
 #model_path: "../model/yolo/yolo11n-seg.om"
+#model_path: "../model/yolo/yolo.rknn"
+model_path: "../model/yolo/yolo.om"
+#model_path: "../model/yolo/yolo.trt"
 #model_path: "../model/yolo/yolo11n-seg.rknn"
 video_path: "../model/video/rose.mp4"
 video_play_fps: 25

@@ -195,7 +195,9 @@ cv::Mat GetImageResult(const cv::Mat &original_image,
   int height = image.rows;
   std::vector<Object> objects;
   for (auto result : results) {
-    AddWeightedSegment(image, result.seg_mat, result.class_id);
+    if (result.model_type == YoloPostProcess::ModelType::SEGMENT_V11) {
+      AddWeightedSegment(image, result.seg_mat, result.class_id);
+    }
     float x1, y1, x2, y2;
     x1 = std::max<float>(result.box.x1, 0);
     y1 = std::max<float>(result.box.y1, 0);
