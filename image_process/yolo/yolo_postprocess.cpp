@@ -66,6 +66,8 @@ YoloPostProcess::YoloPostProcess(const ai_framework::Config &config,
     model_type_ = ModelType::DETECTION_V8;
   } else if (ContainsSubString(output_boxes_name, "yolov8_pose")) {
     model_type_ = ModelType::POSE_V8;
+  } else if (ContainsSubString(output_boxes_name, "yolo13_detect")) {
+    model_type_ = ModelType::DETECTION_V13;
   } else if (ContainsSubString(output_boxes_name, "yolo11_detect")) {
     model_type_ = ModelType::DETECTION_V11;
   } else if (ContainsSubString(output_boxes_name, "yolo11_segment")) {
@@ -88,6 +90,7 @@ void YoloPostProcess::Run(void **&tensors) {
   if (model_type_ == ModelType::DETECTION_V8 ||
       model_type_ == ModelType::DETECTION_V10 ||
       model_type_ == ModelType::DETECTION_V11 ||
+      model_type_ == ModelType::DETECTION_V13 ||
       model_type_ == ModelType::SEGMENT_V11) {
     PostProcessDetectSegment(tensors);
   } else if (model_type_ == ModelType::POSE_V8) {
@@ -276,6 +279,7 @@ void YoloPostProcess::PostProcessDetectSegment(void **&tensors) {
   std::vector<int> indexArray;
   if (model_type_ == ModelType::DETECTION_V8 ||
       model_type_ == ModelType::DETECTION_V11 ||
+      model_type_ == ModelType::DETECTION_V13 ||
       model_type_ == ModelType::SEGMENT_V11) {
     for (int i = 0; i < validCount; i++) {
       indexArray.push_back(i);
@@ -291,6 +295,7 @@ void YoloPostProcess::PostProcessDetectSegment(void **&tensors) {
     Result res;
     if (model_type_ == ModelType::DETECTION_V8 ||
         model_type_ == ModelType::DETECTION_V11 ||
+        model_type_ == ModelType::DETECTION_V13 ||
         model_type_ == ModelType::SEGMENT_V11) {
       if (indexArray[i] == -1) {
         continue;

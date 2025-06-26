@@ -9,18 +9,19 @@
 
 class YoloPostProcess {
  public:
-  enum ModelType : uint16_t {
-    DETECTION_V8 = 0,
-    DETECTION_V10,
-    DETECTION_V11,
-    POSE_V8,
-    SEGMENT_V11,
-  };
-  struct Bbox {
-    float x1;
-    float y1;
-    float x2;
-    float y2;
+   enum ModelType : uint16_t {
+     DETECTION_V8 = 0,
+     DETECTION_V10,
+     DETECTION_V11,
+     DETECTION_V13,
+     POSE_V8,
+     SEGMENT_V11,
+   };
+   struct Bbox {
+     float x1;
+     float y1;
+     float x2;
+     float y2;
   };
   struct KeyPoint {
     float x;
