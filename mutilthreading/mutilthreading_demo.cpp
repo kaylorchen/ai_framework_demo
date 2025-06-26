@@ -34,7 +34,13 @@ int main(int argc, char** argv){
   YoloThreadpool yolo_threadpool(model_path, confidence_thresholds, 3);
   std::vector<cv::Mat> input(1);
   VideoFile video_file(video_path);
-  //    input.at(0) = video_file.GetNextFrame();
+  input.at(0) = video_file.GetNextFrame();
+  if (!input.at(0).empty()) {
+    std::vector<double> time;
+    time.push_back(get_now());
+    yolo_threadpool.AddInferenceTask(input, time, true);
+  }
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   int image_count = 0;
   int result_count = 0;
   int lost_count = 0;
