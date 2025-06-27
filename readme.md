@@ -1,3 +1,6 @@
+# Download Model
+There is a [repository](https://github.com/kaylorchen/model_convert) with github action to converting model, you can find om(huaiwei), rknn(rockchip) and onnx in the repository.
+
 # Install Dependencies
 
 PS: The project only supports Ubuntu 22.04. If you wish to support other systems, please send an email to kaylor.chen@qq.com. Consultation fees are required. Thank you. 
