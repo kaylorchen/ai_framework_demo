@@ -1,3 +1,9 @@
+
+QQ group: 957577822 (full)  
+QQ group: 546943464  
+
+
+I am a Bilibili Up namded kaylordut, you can find me via [link](https://space.bilibili.com/327258623?spm_id_from=333.1387.0.0)
 # Download Model
 There is a [repository](https://github.com/kaylorchen/model_convert) with github action to converting model, you can find om(huaiwei), rknn(rockchip) and onnx in the repository.
 
