@@ -64,7 +64,8 @@ YoloPostProcess::YoloPostProcess(const ai_framework::Config &config,
     model_type_ = ModelType::DETECTION_V10;
   } else if (ContainsSubString(output_boxes_name, "yolov8_detect")) {
     model_type_ = ModelType::DETECTION_V8;
-  } else if (ContainsSubString(output_boxes_name, "yolov8_pose")) {
+  } else if (ContainsSubString(output_boxes_name, "yolov8_pose") ||
+             ContainsSubString(output_boxes_name, "yolo11_pose")) {
     model_type_ = ModelType::POSE_V8;
   } else if (ContainsSubString(output_boxes_name, "yolo13_detect")) {
     model_type_ = ModelType::DETECTION_V13;
@@ -406,14 +407,15 @@ uint16_t YoloPostProcess::ProcessPose(const float *box_tensor,
       int offset = i * grid_w + j;
       float max_score = 0;
       int max_class_id = -1;
-      for (size_t k = 0; k < conf_threshold_->size(); ++k) {
-        if (score_tensor[offset] > conf_threshold_->at(k) &&
-            score_tensor[offset] > max_score) {
-          max_score = score_tensor[offset];
-          max_class_id = k;
-        }
-        offset += grid_len;
+      // 因为pose这个模型只是检测人的类型，所以只有一个种类
+      // for (size_t k = 0; k < conf_threshold_->size(); ++k) {
+      if (score_tensor[offset] > conf_threshold_->at(0) &&
+          score_tensor[offset] > max_score) {
+        max_score = score_tensor[offset];
+        max_class_id = 0;
       }
+      //   offset += grid_len;
+      // }
       if (max_class_id != -1) {
         offset = i * grid_w + j;
         float box[4];

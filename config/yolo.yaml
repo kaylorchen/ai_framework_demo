@@ -9,7 +9,8 @@
 #model_path: "../model/yolo/yolo11n.om"
 #model_path: "../model/yolo/yolov13n.om"
 #model_path: "../model/yolo/yolo11n.trt"
-model_path: "../model/yolo/yolov13n.trt"
+model_path: "../model/yolo/yolo11n-pose.trt"
+#model_path: "../model/yolo/yolov13n.trt"
 #model_path: "../model/yolo/yolo11n-seg.rknn"
 video_path: "../model/video/rose.mp4"
-video_play_fps: 100
+video_play_fps: 30

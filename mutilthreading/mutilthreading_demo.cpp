@@ -31,7 +31,7 @@ int main(int argc, char** argv){
     labels.push_back(kv.first.as<std::string>());
     confidence_thresholds.push_back(kv.second["confidence_threshold"].as<float>());
   }
-  YoloThreadpool yolo_threadpool(model_path, confidence_thresholds, 3);
+  YoloThreadpool yolo_threadpool(model_path, confidence_thresholds, 1);
   std::vector<cv::Mat> input(1);
   VideoFile video_file(video_path);
   input.at(0) = video_file.GetNextFrame();
@@ -67,8 +67,8 @@ int main(int argc, char** argv){
       } else {
         lost_count++;
       }
-      KAYLORDUT_LOG_DEBUG("image_count: {}, result count: {}", image_count,
-                          result_count);
+      KAYLORDUT_LOG_DEBUG("image_count: {}, result count: {}, lost count: {}",
+                          image_count, result_count, lost_count);
     };
     run_once_with_delay(func, std::chrono::milliseconds(delay));
   } while ((!input.at(0).empty() || yolo_threadpool.get_task_size() ||
