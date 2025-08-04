@@ -260,13 +260,26 @@ void ShowAndSave(const cv::Mat &image, int cv_wait_ms, bool is_save) {
     gVideoWriter->write(image);
   }
 }
+
+#include "framebuffer.h"
+std::shared_ptr<FrameBuffer> kFramebuffer;
+
 void ShowResults(const cv::Mat &original_image, const int target_side_length,
                  const std::vector<YoloPostProcess::Result> &results,
                  std::vector<std::string> &labels, int cv_wait_ms,
-                 bool enable_track, bool is_save) {
+                 bool enable_track, bool is_save, bool hdmi_output,
+                 bool cv_show) {
   auto image = GetImageResult(original_image, target_side_length, results,
                               labels, enable_track);
-  ShowAndSave(image, cv_wait_ms, is_save);
+  if (hdmi_output) {
+    if (kFramebuffer == nullptr) {
+      kFramebuffer = std::make_shared<FrameBuffer>("/dev/fb0");
+    }
+    kFramebuffer->WriteFrameBuffer(image);
+  }
+  if (cv_show) {
+    ShowAndSave(image, cv_wait_ms, is_save);
+  }
 }
 
 std::vector<std::string> ReadLabelsFromTextFile(const std::string &filename) {

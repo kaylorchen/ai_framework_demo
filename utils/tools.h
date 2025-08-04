@@ -9,7 +9,8 @@
 void ShowResults(const cv::Mat &original_image, const int target_side_length,
                  const std::vector<YoloPostProcess::Result> &results,
                  std::vector<std::string> &labels, int cv_wait_ms,
-                 bool enable_track = false, bool is_save = false);
+                 bool enable_track = false, bool is_save = false,
+                 bool hdmi_output = false, bool cv_show = true);
 void ShowAndSave(const cv::Mat &image, int cv_wait_ms, bool is_save);
 cv::Mat GetImageResult(const cv::Mat &original_image,
                        const int target_side_length,
