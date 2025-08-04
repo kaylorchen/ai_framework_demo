@@ -218,11 +218,11 @@ void YoloPostProcess::PostProcessPose(void **&tensors) {
     grid_w = output_layer_shape.at(box_idx).at(3);
     stride = model_height_ / grid_h;
     validCount +=
-        ProcessPose(reinterpret_cast<const float *>(tensors[box_idx]),
-                    reinterpret_cast<const float *>(tensors[score_idx]),
-                    reinterpret_cast<const float *>(tensors[kpt_idx]),
-                    reinterpret_cast<const float *>(tensors[visibilities_idx]),
-                    grid_w, grid_h, stride);
+        ProcessPose(reinterpret_cast<const void *>(tensors[box_idx]),
+                    reinterpret_cast<const void *>(tensors[score_idx]),
+                    reinterpret_cast<const void *>(tensors[kpt_idx]),
+                    reinterpret_cast<const void *>(tensors[visibilities_idx]),
+                    grid_w, grid_h, stride, i, output_per_branch);
   }
   if (validCount <= 0) {
     return;
@@ -395,33 +395,75 @@ static void compute_dfl(float *tensor, int dfl_len, float *box) {
   }
 }
 
-uint16_t YoloPostProcess::ProcessPose(const float *box_tensor,
-                                      const float *score_tensor,
-                                      const float *kpt_tensor,
-                                      const float *visibility_tensor,
-                                      int grid_w, int grid_h, int stride) {
+uint16_t YoloPostProcess::ProcessPose(const void *box_tensor,
+                                      const void *score_tensor,
+                                      const void *kpt_tensor,
+                                      const void *visibility_tensor, int grid_w,
+                                      int grid_h, int stride, int index,
+                                      int output_per_branch) {
+  const float *box_tensor_float = reinterpret_cast<const float *>(box_tensor);
+  const float *score_tensor_float =
+      reinterpret_cast<const float *>(score_tensor);
+  const float *kpt_tensor_float = reinterpret_cast<const float *>(kpt_tensor);
+  const float *visibility_tensor_float =
+      reinterpret_cast<const float *>(visibility_tensor);
+  const int8_t *box_tensor_int8 = reinterpret_cast<const int8_t *>(box_tensor);
+  const int8_t *score_tensor_int8 =
+      reinterpret_cast<const int8_t *>(score_tensor);
+  const int8_t *kpt_tensor_int8 = reinterpret_cast<const int8_t *>(kpt_tensor);
+  const int8_t *visibility_tensor_int8 =
+      reinterpret_cast<const int8_t *>(visibility_tensor);
+  bool is_qnt = zero_points_.empty() ? false : true;
+  int8_t score_thres_i8 =
+      is_qnt ? qnt_f32_to_affine(conf_threshold_->at(0),
+                                 zero_points_.at(index * output_per_branch + 1),
+                                 scale_.at(index * output_per_branch + 1))
+             : 0;
   uint16_t valid_count = 0;
   int grid_len = grid_w * grid_h;
   for (int i = 0; i < grid_h; ++i) {
     for (int j = 0; j < grid_w; ++j) {
       int offset = i * grid_w + j;
-      float max_score = 0;
+      float max_score_float = 0;
+      int8_t max_score_int8 =
+          is_qnt ? qnt_f32_to_affine(
+                       0.0f, zero_points_.at(index * output_per_branch + 1),
+                       scale_.at(index * output_per_branch + 1))
+                 : 0;
       int max_class_id = -1;
       // 因为pose这个模型只是检测人的类型，所以只有一个种类
-      // for (size_t k = 0; k < conf_threshold_->size(); ++k) {
-      if (score_tensor[offset] > conf_threshold_->at(0) &&
-          score_tensor[offset] > max_score) {
-        max_score = score_tensor[offset];
-        max_class_id = 0;
+      if (model_format_ == ModelFormat::TRT_FORMAT ||
+          model_format_ == ModelFormat::ONNX_FORMAT ||
+          model_format_ == ModelFormat::NNRT_FORMAT) {
+        if (score_tensor_float[offset] > conf_threshold_->at(0) &&
+            score_tensor_float[offset] > max_score_float) {
+          max_score_float = score_tensor_float[offset];
+          max_class_id = 0;
+        }
+      } else if (model_format_ == ModelFormat::RKNN_FORMAT) {
+        if (score_tensor_int8[offset] > score_thres_i8 &&
+            score_tensor_int8[offset] > max_score_int8) {
+          max_score_int8 = score_tensor_int8[offset];
+          max_class_id = 0;
+        }
       }
-      //   offset += grid_len;
-      // }
       if (max_class_id != -1) {
         offset = i * grid_w + j;
         float box[4];
         float before_dfl[dfl_len_ * 4];
         for (int k = 0; k < dfl_len_ * 4; ++k) {
-          before_dfl[k] = box_tensor[offset];
+          if (model_format_ == ModelFormat::ONNX_FORMAT ||
+              model_format_ == ModelFormat::NNRT_FORMAT ||
+              model_format_ == ModelFormat::TRT_FORMAT) {
+            before_dfl[k] = box_tensor_float[offset];
+          } else if (model_format_ == ModelFormat::RKNN_FORMAT) {
+            before_dfl[k] =
+                is_qnt ? deqnt_affine_to_f32(
+                             box_tensor_int8[offset],
+                             zero_points_.at(index * output_per_branch),
+                             scale_.at(index * output_per_branch))
+                       : 0;
+          }
           offset += grid_len;
         }
         compute_dfl(before_dfl, dfl_len_, box);
@@ -431,16 +473,57 @@ uint16_t YoloPostProcess::ProcessPose(const float *box_tensor,
         _bbox.x2 = (box[2] + j + 0.5) * stride;
         _bbox.y2 = (box[3] + i + 0.5) * stride;
         bboxes_.push_back(_bbox);
-        obj_probs_.push_back(max_score);
         class_id_.push_back(max_class_id);
-        offset = i * grid_w + j;
-        for (int k = 0; k < 17; ++k) {
-          auto kpt_x = *(kpt_tensor + offset + 2 * k * grid_len);
-          auto kpt_y = *(kpt_tensor + offset + (2 * k + 1) * grid_len);
-          auto kpt_visibility = *(visibility_tensor + offset + k * grid_len);
-          kpt.push_back(kpt_x);
-          kpt.push_back(kpt_y);
-          visibilities.push_back(kpt_visibility);
+        if (model_format_ == ModelFormat::ONNX_FORMAT ||
+            model_format_ == ModelFormat::NNRT_FORMAT ||
+            model_format_ == ModelFormat::TRT_FORMAT) {
+          obj_probs_.push_back(max_score_float);
+          offset = i * grid_w + j;
+          for (int k = 0; k < 17; ++k) {
+            auto kpt_x = *(kpt_tensor_float + offset + 2 * k * grid_len);
+            auto kpt_y = *(kpt_tensor_float + offset + (2 * k + 1) * grid_len);
+            auto kpt_visibility =
+                *(visibility_tensor_float + offset + k * grid_len);
+            kpt.push_back(kpt_x);
+            kpt.push_back(kpt_y);
+            visibilities.push_back(kpt_visibility);
+          }
+        } else if (model_format_ == ModelFormat::RKNN_FORMAT) {
+          auto max_score =
+              is_qnt ? deqnt_affine_to_f32(
+                           max_score_int8,
+                           zero_points_.at(index * output_per_branch + 1),
+                           scale_.at(index * output_per_branch + 1))
+                     : 0;
+          obj_probs_.push_back(max_score);
+          offset = i * grid_w + j;
+          for (int k = 0; k < 17; ++k) {
+            auto kpt_x = *(kpt_tensor_int8 + offset + 2 * k * grid_len);
+            auto kpt_y = *(kpt_tensor_int8 + offset + (2 * k + 1) * grid_len);
+            auto kpt_visibility =
+                *(visibility_tensor_int8 + offset + k * grid_len);
+            auto x =
+                is_qnt
+                    ? deqnt_affine_to_f32(
+                          kpt_x, zero_points_.at(index * output_per_branch + 2),
+                          scale_.at(index * output_per_branch + 2))
+                    : 0;
+            auto y =
+                is_qnt
+                    ? deqnt_affine_to_f32(
+                          kpt_y, zero_points_.at(index * output_per_branch + 2),
+                          scale_.at(index * output_per_branch + 2))
+                    : 0;
+            auto visibility =
+                is_qnt ? deqnt_affine_to_f32(
+                             kpt_visibility,
+                             zero_points_.at(index * output_per_branch + 3),
+                             scale_.at(index * output_per_branch + 3))
+                       : 0;
+            kpt.push_back(x);
+            kpt.push_back(y);
+            visibilities.push_back(visibility);
+          }
         }
         valid_count++;
       }
