@@ -61,7 +61,7 @@ int main(int argc, char** argv){
             "ShowResults()",
             ShowResults(result->original_image.at(0),
                         yolo_threadpool.get_model_input_side_length(),
-                        result->results, labels, 1, false, false, true, false));
+                        result->results, labels, 1, false, false, false, true));
         ++result_count;
         lost_count = 0;
       } else {

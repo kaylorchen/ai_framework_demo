@@ -29,6 +29,14 @@ class YoloThreadpool {
   YoloThreadpool(std::string &model_path, std::vector<float> &conf_threshold,
                  int threads = 1);
 
+  YoloThreadpool(const char *model_data, const uint64_t model_size,
+                 const std::string model_extension,
+                 std::vector<float> &conf_threshold, int threads = 1);
+
+  void Initialize(const char *model_data, const uint64_t model_size,
+                  const std::string model_extension,
+                  std::vector<float> &conf_threshold, int threads = 1);
+
   void AddInferenceTask(const std::vector<cv::Mat> &original_image,
                         const std::vector<double> timepoints,
                         const bool time_points = true,
@@ -57,11 +65,12 @@ class YoloThreadpool {
 
  private:
   template <class T>
-  void CreateAiInstance(std::string &model_path, int &threads) {
+  void CreateAiInstance(const char *model_data, const uint64_t model_size,
+                        int &threads) {
     assert(threads > 0);
     std::shared_ptr<ai_framework::AiInstance> instance = std::make_shared<T>();
     instances_.push_back(instance);
-    instances_.at(0)->Initialize(model_path.c_str());
+    instances_.at(0)->Initialize(model_data, model_size);
     for (int i = 1; i < threads; ++i) {
 #ifdef RK3588
       auto rk3588_instance = std::dynamic_pointer_cast<Rk3588>(instance);
@@ -69,7 +78,7 @@ class YoloThreadpool {
 #else
       instances_.push_back(std::make_shared<T>());
 #endif
-      instances_.at(i)->Initialize(model_path.c_str());
+      instances_.at(i)->Initialize(model_data, model_size);
     }
   }
 

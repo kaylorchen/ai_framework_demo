@@ -17,36 +17,36 @@
 #ifdef NNRT
 #include "platform/nnrt/nnrt.h"
 #endif
+#include "fstream"
 #include "tools.h"
 
-YoloThreadpool::YoloThreadpool(std::string &model_path,
-                               std::vector<float> &conf_threshold,
-                               int threads) {
+void YoloThreadpool::Initialize(const char *model_data,
+                                const uint64_t model_size,
+                                const std::string model_extension,
+                                std::vector<float> &conf_threshold,
+                                int threads) {
   try {
     this->num_threads_ = threads;
     this->threads_mutex_ = std::make_unique<std::mutex[]>(threads);
     this->pool_ = std::make_unique<ThreadPool>(threads);
-    auto model_extension = model_path.substr(model_path.find_last_of('.') + 1);
-    KAYLORDUT_LOG_INFO("model_path is {},  model_extension is {}", model_path,
-                       model_extension);
 #ifdef RK3588
     if (model_extension == "rknn") {
-      CreateAiInstance<Rk3588>(model_path, threads);
+      CreateAiInstance<Rk3588>(model_data, model_size, threads);
     }
 #endif
 #ifdef ONNX
     if (model_extension == "onnx") {
-      CreateAiInstance<OnnxRuntime>(model_path, threads);
+      CreateAiInstance<OnnxRuntime>(model_data, model_size, threads);
     }
 #endif
 #ifdef TRT
     if (model_extension == "trt" || model_extension == "engine") {
-      CreateAiInstance<TensorRT>(model_path, threads);
+      CreateAiInstance<TensorRT>(model_data, model_size, threads);
     }
 #endif
 #ifdef NNRT
     if (model_extension == "om") {
-      CreateAiInstance<Nnrt>(model_path, threads);
+      CreateAiInstance<Nnrt>(model_data, model_size, threads);
     }
 #endif
     KAYLORDUT_LOG_INFO("number of instances is {}", this->instances_.size());
@@ -67,6 +67,33 @@ YoloThreadpool::YoloThreadpool(std::string &model_path,
   }
   instances_.at(0)->PrintLayerInfo();
   KAYLORDUT_LOG_INFO("Yolo thread pool initialization completed")
+}
+
+YoloThreadpool::YoloThreadpool(const char *model_data,
+                               const uint64_t model_size,
+                               const std::string model_extension,
+                               std::vector<float> &conf_threshold,
+                               int threads) {
+  Initialize(model_data, model_size, model_extension, conf_threshold, threads);
+}
+
+YoloThreadpool::YoloThreadpool(std::string &model_path,
+                               std::vector<float> &conf_threshold,
+                               int threads) {
+  auto model_extension = model_path.substr(model_path.find_last_of('.') + 1);
+  KAYLORDUT_LOG_INFO("model_path is {},  model_extension is {}", model_path,
+                     model_extension);
+  std::ifstream file(model_path, std::ios::binary);
+  assert(file.good());
+  file.seekg(0, std::ios::end);
+  auto size = file.tellg();
+  file.seekg(0, std::ios::beg);
+  char *model_stream = new char[size];
+  assert(model_stream);
+  file.read(model_stream, size);
+  file.close();
+  Initialize(model_stream, size, model_extension, conf_threshold, threads);
+  delete[] model_stream;
 }
 
 void YoloThreadpool::AddInferenceTask(
