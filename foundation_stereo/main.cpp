@@ -1,0 +1,52 @@
+//
+// Created by kaylor on 11/25/25.
+//
+#include "kaylordut/log/logger.h"
+#if defined(TRT)
+#include "platform/tensorrt/tensorrt.h"
+#elif defined(ONNX)
+#include "platform/onnxruntime/onnxruntime.h"
+#elif defined(RK3588)
+#include "platform/rockchip/rk3588.h"
+#elif defined(NNRT)
+#include "platform/nnrt/nnrt.h"
+#endif
+#include "foundation_stereo_image_process.h"
+#include "opencv2/opencv.hpp"
+#include "yaml-cpp/yaml.h"
+int main(int argc, char **argv) {
+  KAYLORDUT_LOG_INFO("foundation_stereo demo");
+  auto config = YAML::LoadFile("../config/foundation_stereo.yaml");
+  std::string model_path = config["model_path"].as<std::string>();
+  auto left_image_path = config["image_path"]["left"].as<std::string>();
+  auto right_image_path = config["image_path"]["right"].as<std::string>();
+  KAYLORDUT_LOG_INFO("left_image_path = {}", left_image_path);
+  KAYLORDUT_LOG_INFO("right_image_path = {}", right_image_path);
+  auto left_image = cv::imread(left_image_path);
+  auto right_image = cv::imread(right_image_path);
+  // cv::imshow("left_image", left_image);
+  // cv::imshow("right_image", right_image);
+  // cv::waitKey();
+#if defined(TRT)
+  auto ai_instance = std::make_shared<TensorRT>();
+#elif defined(ONNX)
+  auto ai_instance = std::make_shared<OnnxRuntime>();
+#elif defined(RK3588)
+  auto ai_instance = std::make_shared<Rk3588>(true);
+#elif defined(NNRT)
+  auto ai_instance = std::make_shared<Nnrt>();
+#endif
+  ai_instance->Initialize(model_path.c_str());
+  ai_instance->PrintLayerInfo();
+  ai_framework::TensorData tensor_data(ai_instance->get_config());
+  std::vector<cv::Mat> imgs = {left_image, right_image};
+  FoundationStereoImageProcess image_process(ai_instance->get_config());
+  image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
+  ai_instance->BindInputAndOutput(tensor_data);
+  KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
+  auto depth_map =
+      image_process.PostProcess(tensor_data.get_output_tensor_ptr());
+  cv::imshow("depth_map", depth_map);
+  cv::waitKey();
+  return 0;
+}

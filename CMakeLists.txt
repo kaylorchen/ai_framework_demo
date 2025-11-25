@@ -63,3 +63,6 @@ target_link_libraries(depth_camera_demo depth_image_process ${LINKS} ${AI_LIB})
 
 add_executable(inference_test inference_without_preprocess_postprocess/main.cpp)
 target_link_libraries(inference_test ${LINKS} ${AI_LIB})
+
+add_executable(foundation_stereo foundation_stereo/main.cpp foundation_stereo/foundation_stereo_image_process.cpp)
+target_link_libraries(foundation_stereo ${LINKS} ${AI_LIB})
