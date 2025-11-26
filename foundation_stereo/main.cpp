@@ -13,6 +13,8 @@
 #endif
 #include "foundation_stereo_image_process.h"
 #include "opencv2/opencv.hpp"
+#include "pcl/io/pcd_io.h"
+#include "pcl/io/ply_io.h"
 #include "yaml-cpp/yaml.h"
 int main(int argc, char **argv) {
   KAYLORDUT_LOG_INFO("foundation_stereo demo");
@@ -22,6 +24,19 @@ int main(int argc, char **argv) {
   auto right_image_path = config["image_path"]["right"].as<std::string>();
   KAYLORDUT_LOG_INFO("left_image_path = {}", left_image_path);
   KAYLORDUT_LOG_INFO("right_image_path = {}", right_image_path);
+  auto baseline = config["baseline"].as<float>();
+  auto K = config["K"].as<std::vector<float>>();
+  std::stringstream ss;
+  ss << std::endl << "baseline = " << baseline << std::endl;
+  ss << "K = " << std::endl;
+  for (size_t i = 0; i < K.size(); ++i) {
+    ss << K[i] << " ";
+    if ((i + 1) % 3 == 0) {
+      ss << std::endl;
+    }
+  }
+  KAYLORDUT_LOG_INFO("{}", ss.str());
+
   auto left_image = cv::imread(left_image_path);
   auto right_image = cv::imread(right_image_path);
   // cv::imshow("left_image", left_image);
@@ -40,15 +55,18 @@ int main(int argc, char **argv) {
   ai_instance->PrintLayerInfo();
   ai_framework::TensorData tensor_data(ai_instance->get_config());
   std::vector<cv::Mat> imgs = {left_image, right_image};
-  FoundationStereoImageProcess image_process(ai_instance->get_config());
+  FoundationStereoImageProcess image_process(ai_instance->get_config(), K,
+                                             baseline);
   image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
   ai_instance->BindInputAndOutput(tensor_data);
-  for (size_t i = 0; i < 100; ++i) {
+  for (size_t i = 0; i < 1; ++i) {
     KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
   }
-  auto depth_map =
-      image_process.PostProcess(tensor_data.get_output_tensor_ptr());
-  cv::imshow("depth_map", depth_map);
+  auto res = image_process.PostProcess(tensor_data.get_output_tensor_ptr(),
+                                       imgs.at(0));
+  pcl::io::savePCDFile("cloud.pcd", *res->cloud);
+  pcl::io::savePLYFile("cloud.ply", *res->cloud);
+  cv::imshow("depth_map", res->depth_img);
   cv::waitKey();
   return 0;
 }

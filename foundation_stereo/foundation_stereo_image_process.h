@@ -4,17 +4,37 @@
 
 #pragma once
 #include "ai_framework.h"
+#include "image_padder.h"
 #include "opencv2/opencv.hpp"
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 class FoundationStereoImageProcess {
 public:
+  struct ProcessResult {
+    cv::Mat original_img;
+    cv::Mat disparity_img;
+    cv::Mat depth_img;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud;
+  };
   FoundationStereoImageProcess() = delete;
-  FoundationStereoImageProcess(const ai_framework::Config &config);
+  FoundationStereoImageProcess(const ai_framework::Config &config,
+                               const std::vector<float> &K, float baseline);
   ~FoundationStereoImageProcess() = default;
   void PreProcess(const std::vector<cv::Mat> &imgs, void **&tensors);
-  cv::Mat PostProcess(void **&tensors);
+  std::shared_ptr<ProcessResult> PostProcess(void **&tensors,
+                                             const cv::Mat &original_img);
 
 private:
   int width_;
   int height_;
+  std::vector<float> K_;
+  float baseline_;
+  image_processing::ImagePadder padder_;
+  void RemoveInvisiblePoints(cv::Mat &disp);
+  void ComputeDepth(cv::Mat &depth, const cv::Mat &disp, float K00,
+                    float baseline);
+  pcl::PointCloud<pcl::PointXYZRGB>::Ptr
+  DepthImageToPointCloud(const cv::Mat &depth, const cv::Mat &rgb,
+                         std::vector<float> &K);
 };

@@ -1,5 +1,10 @@
-model_path: "../model/foundation_stereo/foundation_stereo.trt"
 #model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/normal/foundation_stereo.trt"
+model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/normal_540/foundation_stereo.trt"
 image_path:
   left: "../model/image/left.png"
   right: "../model/image/right.png"
+baseline: 0.063
+K: [754.6680908203125, 0.0, 489.3794860839844, 0.0,
+    754.6680908203125, 265.16162109375,
+    0.0, 0.0, 1.0]
