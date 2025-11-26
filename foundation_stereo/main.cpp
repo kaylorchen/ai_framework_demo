@@ -43,7 +43,9 @@ int main(int argc, char **argv) {
   FoundationStereoImageProcess image_process(ai_instance->get_config());
   image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
   ai_instance->BindInputAndOutput(tensor_data);
-  KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
+  for (size_t i = 0; i < 100; ++i) {
+    KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
+  }
   auto depth_map =
       image_process.PostProcess(tensor_data.get_output_tensor_ptr());
   cv::imshow("depth_map", depth_map);

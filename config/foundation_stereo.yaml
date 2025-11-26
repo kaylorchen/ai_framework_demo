@@ -1,4 +1,5 @@
 model_path: "../model/foundation_stereo/foundation_stereo.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo.trt"
 image_path:
   left: "../model/image/left.png"
   right: "../model/image/right.png"
