@@ -23,13 +23,14 @@ ImagePadder::ImagePadder(int divis_by, bool force_square)
   }
 }
 
-cv::Mat ImagePadder::Pad(const cv::Mat &image, bool symmetric) {
+cv::Mat ImagePadder::Pad(const cv::Mat &image, bool symmetric,
+                         cv::Size target_size) {
   if (image.empty()) {
     throw std::invalid_argument("Input image is empty");
   }
 
   original_size_ = image.size();
-  ComputePadding(original_size_, symmetric);
+  ComputePadding(original_size_, symmetric, target_size);
 
   cv::Mat padded_image;
   const int top = padding_values_[2];
@@ -71,34 +72,45 @@ cv::Mat ImagePadder::Unpad(const cv::Mat &padded_image) {
   return padded_image(roi).clone();
 }
 
-void ImagePadder::ComputePadding(const cv::Size &image_size, bool symmetric) {
+void ImagePadder::ComputePadding(const cv::Size &image_size, bool symmetric,
+                                 cv::Size target_size) {
   const int height = image_size.height;
   const int width = image_size.width;
 
   int pad_height = 0;
   int pad_width = 0;
-
-  if (force_square_) {
-    const int max_side = std::max(height, width);
-    pad_height = ((max_side / divis_by_) + 1) * divis_by_ - height;
-    pad_width = ((max_side / divis_by_) + 1) * divis_by_ - width;
+  if (target_size.empty()) {
+    if (force_square_) {
+      const int max_side = std::max(height, width);
+      pad_height = ((max_side / divis_by_) + 1) * divis_by_ - height;
+      pad_width = ((max_side / divis_by_) + 1) * divis_by_ - width;
+    } else {
+      pad_height =
+          (((height / divis_by_) + 1) * divis_by_ - height) % divis_by_;
+      pad_width = (((width / divis_by_) + 1) * divis_by_ - width) % divis_by_;
+    }
   } else {
-    pad_height = (((height / divis_by_) + 1) * divis_by_ - height) % divis_by_;
-    pad_width = (((width / divis_by_) + 1) * divis_by_ - width) % divis_by_;
+    if (force_square_) {
+      auto pad = std::max(target_size.height - image_size.height,
+                          target_size.width - image_size.width);
+      pad_width = pad;
+      pad_height = pad;
+    } else {
+      pad_height = target_size.height - image_size.height;
+      pad_width = target_size.width - image_size.width;
+    }
   }
-
   if (symmetric) {
-    // Sintel mode: symmetric padding (top/bottom, left/right)
-    padding_values_ = cv::Vec4i(pad_width / 2,                // left
-                                pad_width - pad_width / 2,    // right
-                                pad_height / 2,               // top
-                                pad_height - pad_height / 2); // bottom
+    // 真正的对称填充：四边均匀分配
+    int pad_left = pad_width / 2;
+    int pad_right = pad_width - pad_left;
+    int pad_top = pad_height / 2;
+    int pad_bottom = pad_height - pad_top;
+
+    padding_values_ = cv::Vec4i(pad_left, pad_right, pad_top, pad_bottom);
   } else {
-    // Asymmetric mode: pad only bottom and right
-    padding_values_ = cv::Vec4i(pad_width / 2,             // left
-                                pad_width - pad_width / 2, // right
-                                0,                         // top
-                                pad_height);               // bottom
+    // 更合理的非对称填充：只在右侧和底部填充
+    padding_values_ = cv::Vec4i(0, pad_width, 0, pad_height);
   }
 }
 

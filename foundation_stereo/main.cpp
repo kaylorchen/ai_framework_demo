@@ -29,11 +29,12 @@ int main(int argc, char **argv) {
   std::stringstream ss;
   ss << std::endl << "baseline = " << baseline << std::endl;
   ss << "K = " << std::endl;
-  for (size_t i = 0; i < K.size(); ++i) {
-    ss << K[i] << " ";
-    if ((i + 1) % 3 == 0) {
-      ss << std::endl;
+  for (int i = 0; i < 3; ++i) {
+    ss << "[ ";
+    for (int j = 0; j < 3; ++j) {
+      ss << std::setw(20) << std::setprecision(6) << std::fixed << K[i * 3 + j];
     }
+    ss << " ]" << std::endl;
   }
   KAYLORDUT_LOG_INFO("{}", ss.str());
 
@@ -64,9 +65,9 @@ int main(int argc, char **argv) {
   }
   auto res = image_process.PostProcess(tensor_data.get_output_tensor_ptr(),
                                        *pre_process_result);
-  pcl::io::savePCDFile("cloud.pcd", *res->cloud);
-  pcl::io::savePLYFile("cloud.ply", *res->cloud);
+  pcl::io::savePCDFile("foundation_stereo_cloud.pcd", *res->cloud);
+  pcl::io::savePLYFile("foundation_stereo_cloud.ply", *res->cloud);
   cv::imshow("depth_map", res->depth_img);
-  cv::waitKey();
+  cv::waitKey(500);
   return 0;
 }

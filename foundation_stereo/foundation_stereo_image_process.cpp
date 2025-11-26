@@ -20,26 +20,30 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
                                          void **&tensors) {
   auto result = std::make_shared<PreProcessResult>();
   for (long unsigned int i = 0; i < imgs.size(); ++i) {
-    auto resize_result = ResizeKeepAspectRatio(imgs.at(i), cv::Size(width_, height_));
+    auto resize_res =
+        ResizeKeepAspectRatio(imgs.at(i), cv::Size(width_, height_));
     if (i == 0) {
-      *result = resize_result;
-      KAYLORDUT_LOG_INFO("scale = {}", resize_result.scale);
+      *result = resize_res;
+      KAYLORDUT_LOG_INFO("resized scale = {}", resize_res.scale);
     }
-    KAYLORDUT_LOG_INFO("original_img_size = {}x{} --> resized_size = {}x{}",
-                       imgs.at(i).cols, imgs.at(i).rows,
-                       resize_result.original_img.cols, resize_result.original_img.rows);
-    cv::Mat img_padded = padder_.Pad(resize_result.original_img);
-    KAYLORDUT_LOG_INFO("resized_img_size = {}x{} --> padded_size = {}x{}",
-                       resize_result.original_img.cols, resize_result.original_img.rows,
-                       img_padded.cols, img_padded.rows);
+    KAYLORDUT_LOG_INFO_ONCE(
+        "original_img_size = {}x{} --> resized_size = {}x{}",
+        resize_res.original_img.cols, resize_res.original_img.rows,
+        resize_res.resized_img.cols, resize_res.resized_img.rows);
+    cv::Mat img_padded =
+        padder_.Pad(resize_res.resized_img, true, cv::Size(width_, height_));
+    KAYLORDUT_LOG_INFO_ONCE("resized_img_size = {}x{} --> padded_size = {}x{}",
+                            resize_res.resized_img.cols,
+                            resize_res.resized_img.rows, img_padded.cols,
+                            img_padded.rows);
     cv::Mat img_resized;
     if (img_padded.size() != cv::Size(width_, height_)) {
-      KAYLORDUT_LOG_INFO("img_padded_size = {}x{} --> target_size = {}x{}",
-                         img_padded.cols, img_padded.rows, width_, height_);
       cv::resize(img_padded, img_resized, cv::Size(width_, height_));
     } else {
       img_resized = img_padded;
     }
+    KAYLORDUT_LOG_INFO_ONCE("img_padded_size = {}x{} --> target_size = {}x{}",
+                            img_padded.cols, img_padded.rows, width_, height_);
 
     // 转换为float
     cv::Mat img_float;
@@ -78,13 +82,14 @@ FoundationStereoImageProcess::PostProcess(void **&tensors,
                      result->disparity_img.rows);
   RemoveInvisiblePoints(result->disparity_img);
   result->depth_img = cv::Mat(result->disparity_img.size(), CV_32FC1);
-  ComputeDepth(result->depth_img, result->disparity_img, K_[0], baseline_);
-  std::vector<float> K(K_.size());
-  for (size_t i = 0; i < K_.size(); ++i) {
-    // K[i] = K_[i] * pre_process_result.scale;
-    K[i] = K_[i];
-  }
-  result->cloud = DepthImageToPointCloud(result->depth_img, pre_process_result.original_img, K);
+  std::vector<float> K = K_;
+  K[0] *= pre_process_result.scale;
+  K[4] *= pre_process_result.scale;
+  K[2] *= pre_process_result.scale;
+  K[5] *= pre_process_result.scale;
+  ComputeDepth(result->depth_img, result->disparity_img, K[0], baseline_);
+  result->cloud = DepthImageToPointCloud(result->depth_img,
+                                         pre_process_result.resized_img, K);
   return result;
 }
 
@@ -168,24 +173,11 @@ struct FoundationStereoImageProcess::PreProcessResult
 FoundationStereoImageProcess::ResizeKeepAspectRatio(
     const cv::Mat &input, const cv::Size &target_size) {
   cv::Mat output;
-
-  // 获取原始图像的宽高
-  int originalWidth = input.cols;
-  int originalHeight = input.rows;
-
-  double scale;
-  if (originalHeight > originalWidth) {
-    // 高度大于宽度，按高度缩放
-    scale = static_cast<double>(target_size.height) / originalHeight;
-  } else {
-    // 宽度大于等于高度，按宽度缩放
-    scale = static_cast<double>(target_size.width) / originalWidth;
-  }
-  KAYLORDUT_LOG_INFO("scale = {}", scale);
+  double scale = std::min((double)target_size.width / input.cols,
+                          (double)target_size.height / input.rows);
   // 计算新的尺寸
-  cv::Size newSize(static_cast<int>(originalWidth * scale),
-                   static_cast<int>(originalHeight * scale));
-
+  cv::Size newSize(static_cast<int>(input.cols * scale),
+                   static_cast<int>(input.rows * scale));
   // 调整图像大小
   cv::resize(input, output, newSize, 0, 0, cv::INTER_LINEAR);
 
