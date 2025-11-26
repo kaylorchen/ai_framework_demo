@@ -15,10 +15,23 @@ FoundationStereoImageProcess::FoundationStereoImageProcess(
   baseline_ = baseline;
 }
 
-void FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
-                                              void **&tensors) {
+std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
+FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
+                                         void **&tensors) {
+  auto result = std::make_shared<PreProcessResult>();
   for (long unsigned int i = 0; i < imgs.size(); ++i) {
-    cv::Mat img_padded = padder_.Pad(imgs[i]);
+    auto resize_result = ResizeKeepAspectRatio(imgs.at(i), cv::Size(width_, height_));
+    if (i == 0) {
+      *result = resize_result;
+      KAYLORDUT_LOG_INFO("scale = {}", resize_result.scale);
+    }
+    KAYLORDUT_LOG_INFO("original_img_size = {}x{} --> resized_size = {}x{}",
+                       imgs.at(i).cols, imgs.at(i).rows,
+                       resize_result.original_img.cols, resize_result.original_img.rows);
+    cv::Mat img_padded = padder_.Pad(resize_result.original_img);
+    KAYLORDUT_LOG_INFO("resized_img_size = {}x{} --> padded_size = {}x{}",
+                       resize_result.original_img.cols, resize_result.original_img.rows,
+                       img_padded.cols, img_padded.rows);
     cv::Mat img_resized;
     if (img_padded.size() != cv::Size(width_, height_)) {
       KAYLORDUT_LOG_INFO("img_padded_size = {}x{} --> target_size = {}x{}",
@@ -48,34 +61,15 @@ void FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
            total_pixels * sizeof(float)); // G
     memcpy(dst + total_pixels * 2, bgr_channels[0].data,
            total_pixels * sizeof(float)); // B
-
-    // cv::Mat img = imgs.at(i);
-    // cv::resize(img, img, cv::Size(width_, height_));
-    // img.convertTo(img, CV_32FC3, 1.0f);
-    //
-    // auto dst = reinterpret_cast<float *>(tensors[i]);
-    // auto *R = dst;
-    // auto *G = dst + img.total();
-    // auto *B = dst + img.total() * 2;
-    // for (int i = 0; i < img.rows; ++i) {
-    //   for (int j = 0; j < img.cols; ++j) {
-    //     // Mat 的数据是BGR
-    //     *B = img.at<cv::Vec3f>(i, j)[0];
-    //     B++;
-    //     *G = img.at<cv::Vec3f>(i, j)[1];
-    //     G++;
-    //     *R = img.at<cv::Vec3f>(i, j)[2];
-    //     R++;
-    //   }
-    // }
   }
+  return result;
 }
 
-std::shared_ptr<FoundationStereoImageProcess::ProcessResult>
+std::shared_ptr<FoundationStereoImageProcess::PostProcessResult>
 FoundationStereoImageProcess::PostProcess(void **&tensors,
-                                          const cv::Mat &original_img) {
-  auto result = std::make_shared<ProcessResult>();
-  result->original_img = original_img;
+                                          const PreProcessResult &pre_process_result) {
+  auto result = std::make_shared<PostProcessResult>();
+  result->original_img = pre_process_result.original_img;
   auto inference_output = cv::Mat(height_, width_, CV_32FC1, tensors[0]);
   KAYLORDUT_LOG_INFO("inference_output_size = {}x{}", inference_output.cols,
                      inference_output.rows);
@@ -85,13 +79,12 @@ FoundationStereoImageProcess::PostProcess(void **&tensors,
   RemoveInvisiblePoints(result->disparity_img);
   result->depth_img = cv::Mat(result->disparity_img.size(), CV_32FC1);
   ComputeDepth(result->depth_img, result->disparity_img, K_[0], baseline_);
-  result->cloud = DepthImageToPointCloud(result->depth_img, original_img, K_);
-
-  // cv::Mat depth_normalized;
-  // cv::normalize(disparity_map, depth_normalized, 0, 255, cv::NORM_MINMAX,
-  //               CV_8UC1);
-  // cv::Mat depth_colored;
-  // cv::applyColorMap(depth_normalized, depth_colored, cv::COLORMAP_JET);
+  std::vector<float> K(K_.size());
+  for (size_t i = 0; i < K_.size(); ++i) {
+    // K[i] = K_[i] * pre_process_result.scale;
+    K[i] = K_[i];
+  }
+  result->cloud = DepthImageToPointCloud(result->depth_img, pre_process_result.original_img, K);
   return result;
 }
 
@@ -169,4 +162,32 @@ FoundationStereoImageProcess::DepthImageToPointCloud(const cv::Mat &depth_img,
     }
   }
   return cloud;
+}
+
+struct FoundationStereoImageProcess::PreProcessResult
+FoundationStereoImageProcess::ResizeKeepAspectRatio(
+    const cv::Mat &input, const cv::Size &target_size) {
+  cv::Mat output;
+
+  // 获取原始图像的宽高
+  int originalWidth = input.cols;
+  int originalHeight = input.rows;
+
+  double scale;
+  if (originalHeight > originalWidth) {
+    // 高度大于宽度，按高度缩放
+    scale = static_cast<double>(target_size.height) / originalHeight;
+  } else {
+    // 宽度大于等于高度，按宽度缩放
+    scale = static_cast<double>(target_size.width) / originalWidth;
+  }
+  KAYLORDUT_LOG_INFO("scale = {}", scale);
+  // 计算新的尺寸
+  cv::Size newSize(static_cast<int>(originalWidth * scale),
+                   static_cast<int>(originalHeight * scale));
+
+  // 调整图像大小
+  cv::resize(input, output, newSize, 0, 0, cv::INTER_LINEAR);
+
+  return PreProcessResult{input, output, scale};
 }

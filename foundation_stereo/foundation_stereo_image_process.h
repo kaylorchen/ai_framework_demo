@@ -11,19 +11,27 @@
 
 class FoundationStereoImageProcess {
 public:
-  struct ProcessResult {
+  struct PostProcessResult {
     cv::Mat original_img;
     cv::Mat disparity_img;
     cv::Mat depth_img;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud;
   };
+
+  struct PreProcessResult {
+    cv::Mat original_img;
+    cv::Mat resized_img;
+    double scale;
+  };
+
   FoundationStereoImageProcess() = delete;
   FoundationStereoImageProcess(const ai_framework::Config &config,
                                const std::vector<float> &K, float baseline);
   ~FoundationStereoImageProcess() = default;
-  void PreProcess(const std::vector<cv::Mat> &imgs, void **&tensors);
-  std::shared_ptr<ProcessResult> PostProcess(void **&tensors,
-                                             const cv::Mat &original_img);
+  std::shared_ptr<PreProcessResult> PreProcess(const std::vector<cv::Mat> &imgs,
+                                               void **&tensors);
+  std::shared_ptr<PostProcessResult> PostProcess(void **&tensors,
+                                                 const PreProcessResult &pre_process_result);
 
 private:
   int width_;
@@ -37,4 +45,6 @@ private:
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr
   DepthImageToPointCloud(const cv::Mat &depth, const cv::Mat &rgb,
                          std::vector<float> &K);
+  struct PreProcessResult ResizeKeepAspectRatio(const cv::Mat &input,
+                                                const cv::Size &target_size);
 };

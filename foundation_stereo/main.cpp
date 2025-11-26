@@ -57,13 +57,13 @@ int main(int argc, char **argv) {
   std::vector<cv::Mat> imgs = {left_image, right_image};
   FoundationStereoImageProcess image_process(ai_instance->get_config(), K,
                                              baseline);
-  image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
+  auto pre_process_result = image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
   ai_instance->BindInputAndOutput(tensor_data);
   for (size_t i = 0; i < 1; ++i) {
     KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
   }
   auto res = image_process.PostProcess(tensor_data.get_output_tensor_ptr(),
-                                       imgs.at(0));
+                                       *pre_process_result);
   pcl::io::savePCDFile("cloud.pcd", *res->cloud);
   pcl::io::savePLYFile("cloud.ply", *res->cloud);
   cv::imshow("depth_map", res->depth_img);
