@@ -3,7 +3,7 @@
 //
 #include "kaylordut/log/logger.h"
 #if defined(TRT)
-// #include "platform/tensorrt/tensorrt.h"
+#include "platform/tensorrt/tensorrt.h"
 #elif defined(ONNX)
 #include "platform/onnxruntime/onnxruntime.h"
 #elif defined(RK3588)
@@ -11,7 +11,7 @@
 #elif defined(NNRT)
 #include "platform/nnrt/nnrt.h"
 #endif
-// #include "foundation_stereo_image_process.h"
+#include "foundation_stereo_image_process.h"
 #include "opencv2/opencv.hpp"
 #include "pcl/io/pcd_io.h"
 #include "pcl/io/ply_io.h"
@@ -48,41 +48,50 @@ int main(int argc, char **argv) {
     KAYLORDUT_LOG_ERROR("Failed to open camera");
     return -1;
   }
+  // cv::Mat frame;
+  // while (capture.read(frame)) {
+  //   cv::imshow("frame", frame);
+  //   if (cv::waitKey(1) == 'q') {
+  //     break;
+  //   }
+  // }
+  // return 0;
+
+#if defined(TRT)
+  auto ai_instance = std::make_shared<TensorRT>();
+#elif defined(ONNX)
+  auto ai_instance = std::make_shared<OnnxRuntime>();
+#elif defined(RK3588)
+  auto ai_instance = std::make_shared<Rk3588>(true);
+#elif defined(NNRT)
+  auto ai_instance = std::make_shared<Nnrt>();
+#endif
+  ai_instance->Initialize(model_path.c_str());
+  ai_instance->PrintLayerInfo();
+  ai_framework::TensorData tensor_data(ai_instance->get_config());
+  ai_instance->BindInputAndOutput(tensor_data);
+  FoundationStereoImageProcess image_process(ai_instance->get_config(), K,
+                                             baseline);
+  std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
+      pre_process_result;
+  std::vector<cv::Mat> imgs(2);
   cv::Mat frame;
-  while (capture.read(frame)) {
-    cv::imshow("frame", frame);
+  while (true) {
+    if (!capture.read(frame)) {
+      KAYLORDUT_LOG_ERROR("Failed to read frame");
+      break;
+    }
+    imgs[0] = frame(cv::Rect(0, 0, width / 2, height));
+    imgs[1] = frame(cv::Rect(width / 2, 0, width / 2, height));
+    pre_process_result =
+        image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
+    KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
+    auto post_process_result = image_process.PostProcess(
+        tensor_data.get_output_tensor_ptr(), *pre_process_result);
+    cv::imshow("Depth Map", post_process_result->depth_img);
     if (cv::waitKey(1) == 'q') {
       break;
     }
   }
-  return 0;
-
-  // #if defined(TRT)
-  //   auto ai_instance = std::make_shared<TensorRT>();
-  // #elif defined(ONNX)
-  //   auto ai_instance = std::make_shared<OnnxRuntime>();
-  // #elif defined(RK3588)
-  //   auto ai_instance = std::make_shared<Rk3588>(true);
-  // #elif defined(NNRT)
-  //   auto ai_instance = std::make_shared<Nnrt>();
-  // #endif
-  //   ai_instance->Initialize(model_path.c_str());
-  //   ai_instance->PrintLayerInfo();
-  //   ai_framework::TensorData tensor_data(ai_instance->get_config());
-  //   std::vector<cv::Mat> imgs = {left_image, right_image};
-  //   FoundationStereoImageProcess image_process(ai_instance->get_config(), K,
-  //                                              baseline);
-  //   auto pre_process_result = image_process.PreProcess(imgs,
-  //   tensor_data.get_input_tensor_ptr());
-  //   ai_instance->BindInputAndOutput(tensor_data);
-  //   for (size_t i = 0; i < 1; ++i) {
-  //     KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
-  //   }
-  //   auto res = image_process.PostProcess(tensor_data.get_output_tensor_ptr(),
-  //                                        *pre_process_result);
-  //   pcl::io::savePCDFile("foundation_stereo_cloud.pcd", *res->cloud);
-  //   pcl::io::savePLYFile("foundation_stereo_cloud.ply", *res->cloud);
-  //   cv::imshow("depth_map", res->depth_img);
-  //   cv::waitKey(500);
   return 0;
 }

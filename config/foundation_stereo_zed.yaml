@@ -1,7 +1,4 @@
-model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo.trt"
-#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/normal/foundation_stereo.trt"
-#model_path: "/home/kaylor/work/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo.trt"
-#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/normal_540/foundation_stereo.trt"
+model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo_10.13.2.6.trt"
 device: "/dev/video0"
 width: 2560
 height: 720

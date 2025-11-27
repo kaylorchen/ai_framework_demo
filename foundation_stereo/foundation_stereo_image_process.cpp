@@ -24,7 +24,7 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
         ResizeKeepAspectRatio(imgs.at(i), cv::Size(width_, height_));
     if (i == 0) {
       *result = resize_res;
-      KAYLORDUT_LOG_INFO("resized scale = {}", resize_res.scale);
+      KAYLORDUT_LOG_INFO_ONCE("resized scale = {}", resize_res.scale);
     }
     KAYLORDUT_LOG_INFO_ONCE(
         "original_img_size = {}x{} --> resized_size = {}x{}",
@@ -75,11 +75,12 @@ FoundationStereoImageProcess::PostProcess(void **&tensors,
   auto result = std::make_shared<PostProcessResult>();
   result->original_img = pre_process_result.original_img;
   auto inference_output = cv::Mat(height_, width_, CV_32FC1, tensors[0]);
-  KAYLORDUT_LOG_INFO("inference_output_size = {}x{}", inference_output.cols,
-                     inference_output.rows);
+  KAYLORDUT_LOG_INFO_ONCE("inference_output_size = {}x{}",
+                          inference_output.cols, inference_output.rows);
   result->disparity_img = padder_.Unpad(inference_output);
-  KAYLORDUT_LOG_INFO("disparity_img_size = {}x{}", result->disparity_img.cols,
-                     result->disparity_img.rows);
+  KAYLORDUT_LOG_INFO_ONCE("disparity_img_size = {}x{}",
+                          result->disparity_img.cols,
+                          result->disparity_img.rows);
   RemoveInvisiblePoints(result->disparity_img);
   result->depth_img = cv::Mat(result->disparity_img.size(), CV_32FC1);
   std::vector<float> K = K_;
