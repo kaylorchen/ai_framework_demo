@@ -64,10 +64,13 @@ target_link_libraries(depth_camera_demo depth_image_process ${LINKS} ${AI_LIB})
 add_executable(inference_test inference_without_preprocess_postprocess/main.cpp)
 target_link_libraries(inference_test ${LINKS} ${AI_LIB})
 
-find_package(PCL REQUIRED)
+set(PCL_DIR /home/kaylor/work/pcl/1.15.1/share/pcl-1.15)
+find_package(PCL 1.15 REQUIRED COMPONENTS)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
+message(STATUS "PCL_INCLUDE_DIRS is ${PCL_INCLUDE_DIRS}")
+message(STATUS "PCL_LIBRARY_DIRS is ${PCL_LIBRARY_DIRS}")
 
 add_executable(foundation_stereo
         foundation_stereo/main_read_files.cpp
@@ -79,5 +82,6 @@ add_executable(foundation_stereo_zed
         foundation_stereo/main_zed.cpp
         foundation_stereo/foundation_stereo_image_process.cpp
         foundation_stereo/image_padder.cpp
+        foundation_stereo/display_cloud.cpp
 )
 target_link_libraries(foundation_stereo_zed ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})

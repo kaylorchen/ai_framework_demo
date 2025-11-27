@@ -11,11 +11,13 @@
 #elif defined(NNRT)
 #include "platform/nnrt/nnrt.h"
 #endif
+#include "display_cloud.h"
 #include "foundation_stereo_image_process.h"
 #include "opencv2/opencv.hpp"
 #include "pcl/io/pcd_io.h"
 #include "pcl/io/ply_io.h"
 #include "yaml-cpp/yaml.h"
+
 int main(int argc, char **argv) {
   KAYLORDUT_LOG_INFO("foundation_stereo demo");
   auto config = YAML::LoadFile("../config/foundation_stereo_zed.yaml");
@@ -48,15 +50,6 @@ int main(int argc, char **argv) {
     KAYLORDUT_LOG_ERROR("Failed to open camera");
     return -1;
   }
-  // cv::Mat frame;
-  // while (capture.read(frame)) {
-  //   cv::imshow("frame", frame);
-  //   if (cv::waitKey(1) == 'q') {
-  //     break;
-  //   }
-  // }
-  // return 0;
-
 #if defined(TRT)
   auto ai_instance = std::make_shared<TensorRT>();
 #elif defined(ONNX)
@@ -76,6 +69,7 @@ int main(int argc, char **argv) {
       pre_process_result;
   std::vector<cv::Mat> imgs(2);
   cv::Mat frame;
+  DisplayCloud display_cloud;
   while (true) {
     if (!capture.read(frame)) {
       KAYLORDUT_LOG_ERROR("Failed to read frame");
@@ -88,10 +82,11 @@ int main(int argc, char **argv) {
     KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
     auto post_process_result = image_process.PostProcess(
         tensor_data.get_output_tensor_ptr(), *pre_process_result);
-    cv::imshow("Depth Map", post_process_result->depth_img);
-    if (cv::waitKey(1) == 'q') {
-      break;
-    }
+    display_cloud.ShowCloud(post_process_result->cloud);
+    // cv::imshow("Depth Map", post_process_result->depth_img);
+    // if (cv::waitKey(1) == 'q') {
+    //   break;
+    // }
   }
   return 0;
 }
