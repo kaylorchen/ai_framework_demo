@@ -70,7 +70,14 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 add_executable(foundation_stereo
-        foundation_stereo/main.cpp
+        foundation_stereo/main_read_files.cpp
         foundation_stereo/foundation_stereo_image_process.cpp
         foundation_stereo/image_padder.cpp)
 target_link_libraries(foundation_stereo ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
+
+add_executable(foundation_stereo_zed
+        foundation_stereo/main_zed.cpp
+#        foundation_stereo/foundation_stereo_image_process.cpp
+#        foundation_stereo/image_padder.cpp
+)
+target_link_libraries(foundation_stereo_zed ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
