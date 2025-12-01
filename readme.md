@@ -14,11 +14,10 @@ PS: The project only supports Ubuntu 22.04. If you wish to support other systems
 
 ## add my software source
 
-- If your device is RK3588 or AiPro
+- If your device is Jetson(Orin), RK3588 or AiPro
 ```bash
 cat << 'EOF' | sudo tee /etc/apt/sources.list.d/kaylordut.list 
 deb [arch=arm64 signed-by=/etc/apt/keyrings/kaylor-keyring.gpg] http://apt.kaylordut.cn/kaylordut/ kaylordut main
-deb [arch=arm64 signed-by=/etc/apt/keyrings/kaylor-keyring.gpg] http://apt.kaylordut.cn/rk3588/ubuntu jammy main
 EOF
 sudo mkdir /etc/apt/keyrings -pv
 sudo wget -O /etc/apt/keyrings/kaylor-keyring.gpg http://apt.kaylordut.cn/kaylor-keyring.gpg
@@ -38,6 +37,8 @@ sudo wget -O /etc/apt/keyrings/kaylor-keyring.gpg http://apt.kaylordut.cn/kaylor
 sudo apt update
 sudo apt install kaylordut-dev libbytetrack libopencv-dev libyaml-cpp-dev
 ```
+> kaylordut-dev: my private Log library based on spdlog.  
+> libbytetrack: ByteTrack library was built by me. you can find it in [repository](https://github.com/kaylorchen/bytetrack)
 
 - check ai-instance version
 ```bash
