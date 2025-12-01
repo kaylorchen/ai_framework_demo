@@ -45,13 +45,13 @@ private:
   // Computes padding values based on image dimensions and current settings.
   // @param image_size Size of the input image.
   // @param symmetric Whether to use symmetric padding.
- void ComputePadding(const cv::Size &image_size, bool symmetric,
-                     cv::Size target_size = cv::Size());
+  void ComputePadding(const cv::Size &image_size, bool symmetric,
+                      cv::Size target_size = cv::Size());
 
- int divis_by_;
- bool force_square_;
- cv::Size original_size_;
- cv::Vec4i padding_values_;  // [left, right, top, bottom]
+  int divis_by_;
+  bool force_square_;
+  cv::Size original_size_;
+  cv::Vec4i padding_values_; // [left, right, top, bottom]
 };
 
 } // namespace image_processing

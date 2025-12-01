@@ -30,8 +30,8 @@ public:
   ~FoundationStereoImageProcess() = default;
   std::shared_ptr<PreProcessResult> PreProcess(const std::vector<cv::Mat> &imgs,
                                                void **&tensors);
-  std::shared_ptr<PostProcessResult> PostProcess(void **&tensors,
-                                                 const PreProcessResult &pre_process_result);
+  std::shared_ptr<PostProcessResult>
+  PostProcess(void **&tensors, const PreProcessResult &pre_process_result);
 
 private:
   int width_;

@@ -70,8 +70,8 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
 }
 
 std::shared_ptr<FoundationStereoImageProcess::PostProcessResult>
-FoundationStereoImageProcess::PostProcess(void **&tensors,
-                                          const PreProcessResult &pre_process_result) {
+FoundationStereoImageProcess::PostProcess(
+    void **&tensors, const PreProcessResult &pre_process_result) {
   auto result = std::make_shared<PostProcessResult>();
   result->original_img = pre_process_result.original_img;
   auto inference_output = cv::Mat(height_, width_, CV_32FC1, tensors[0]);
