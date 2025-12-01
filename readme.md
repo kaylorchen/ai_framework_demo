@@ -12,7 +12,7 @@ There is a [repository](https://github.com/kaylorchen/model_convert) with github
 
 PS: The project only supports Ubuntu 22.04. If you wish to support other systems, please send an email to kaylor.chen@qq.com. Consultation fees are required. Thank you. 
 
-## add my software source
+## Add My software source
 
 - If your device is Jetson(Orin), RK3588 or AiPro
 ```bash
@@ -32,6 +32,8 @@ sudo wget -O /etc/apt/keyrings/kaylor-keyring.gpg http://apt.kaylordut.cn/kaylor
 ```
 
 ## install software packages
+ 
+### install common packages
 
 ```bash
 sudo apt update
@@ -40,7 +42,8 @@ sudo apt install kaylordut-dev libbytetrack libopencv-dev libyaml-cpp-dev
 > kaylordut-dev: my private Log library based on spdlog.  
 > libbytetrack: ByteTrack library was built by me. you can find it in [repository](https://github.com/kaylorchen/bytetrack)
 
-- check ai-instance version
+### install ai-instance
+- print ai-instance version
 ```bash
 ❯ apt policy ai-instance 
 ai-instance:
@@ -53,13 +56,19 @@ ai-instance:
      1.0.0-51-gce55bc3-onnx 500
         500 http://apt.kaylordut.cn/kaylordut kaylordut/main amd64 Packages
 ```
-
+- select ai-instance version
 ```bash
-apt install -y ai-instance=1.0.0-51-gce55bc3-tensorrt # tensorrt
+apt install -y ai-instance=1.0.0-51-gce55bc3-tensorrt # if your device is jetson or RTX device, select tensorrt version
 # OR
-apt install -y ai-instance=1.0.0-51-gce55bc3-onnx # onnxruntime
+apt install -y ai-instance=1.0.0-51-gce55bc3-onnx # if your device is PC without GPU, select onnx version
+# OR
+apt install -y ai-instance=xxxxx-rknn # if your device is Rockchip, select rknn version
+# OR
+apt install -y ai-instance=xxxxx-nnrt # if your device is AI Pro, select nnrt version
 ```
-> please install libnvinfer-plugin10 and libnvinfer10 before installing ai-instance(tensorrt version)
+> please install libnvinfer-plugin10 and libnvinfer10 before installing ai-instance(tensorrt version)  
+> Jetson(Orin) device: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/arm64/cuda-keyring_1.1-1_all.deb  
+> RTX device: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb  
 
 
 # TEST
@@ -68,13 +77,13 @@ apt install -y ai-instance=1.0.0-51-gce55bc3-onnx # onnxruntime
 mkdir -pv build
 cd build
 cmake ..
-make
 ```
-> Please modify your configuration in the config directory
+> Please modify your configuration in the config directory, such as the model path, camera index, etc.
 
 ## Test Yolo
 Enter the bulild directory, and run the following command
 ```bash
+make yolo_mutilthreading_demo -j$(nproc) # compile yolo demo only
 ./yolo_mutilthreading_demo
 ```
 
