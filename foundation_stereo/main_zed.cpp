@@ -70,6 +70,8 @@ int main(int argc, char **argv) {
   std::vector<cv::Mat> imgs(2);
   cv::Mat frame;
   DisplayCloud display_cloud;
+  std::shared_ptr<FoundationStereoImageProcess::PostProcessResult>
+      post_process_result;
   while (true) {
     if (!capture.read(frame)) {
       KAYLORDUT_LOG_ERROR("Failed to read frame");
@@ -77,11 +79,14 @@ int main(int argc, char **argv) {
     }
     imgs[0] = frame(cv::Rect(0, 0, width / 2, height));
     imgs[1] = frame(cv::Rect(width / 2, 0, width / 2, height));
-    pre_process_result =
-        image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
+    KAYLORDUT_TIME_COST_INFO("PreProcess()",
+                             pre_process_result = image_process.PreProcess(
+                                 imgs, tensor_data.get_input_tensor_ptr()));
     KAYLORDUT_TIME_COST_INFO("DoInference()", ai_instance->DoInference());
-    auto post_process_result = image_process.PostProcess(
-        tensor_data.get_output_tensor_ptr(), *pre_process_result);
+    KAYLORDUT_TIME_COST_INFO(
+        "PostProcess()",
+        post_process_result = image_process.PostProcess(
+            tensor_data.get_output_tensor_ptr(), *pre_process_result));
     display_cloud.ShowCloud(post_process_result->cloud);
     // cv::imshow("Depth Map", post_process_result->depth_img);
     // if (cv::waitKey(1) == 'q') {

@@ -1,4 +1,10 @@
-model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo_10.13.2.6.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo_10.13.2.6.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/512x288/foundation_stereo_10.13.2.6.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/512x288_small/foundation_stereo_10.13.2.6.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/512x288_small/foundation_stereo_jetson.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/480x288_small/foundation_stereo_jetson_10.3.0.30.trt"
+model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/480x288_small/foundation_stereo_10.13.2.6_fp16.trt"
 device: "/dev/video0"
 width: 2560
 height: 720
