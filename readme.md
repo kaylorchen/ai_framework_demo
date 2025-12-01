@@ -1,6 +1,7 @@
 
 QQ group: 957577822 (full)  
-QQ group: 546943464  
+QQ group: 546943464 (full)
+QQ group: 258137361
 
 
 I am a Bilibili Up namded kaylordut, you can find me via [link](https://space.bilibili.com/327258623?spm_id_from=333.1387.0.0)

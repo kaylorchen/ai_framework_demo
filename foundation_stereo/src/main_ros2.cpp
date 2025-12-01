@@ -93,12 +93,12 @@ private:
   int height_{720};
   int fps_{60};
   std::string device_{"/dev/video0"};
-  // std::string model_path_{
-  //     "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
-  //     "480x288_small/foundation_stereo_10.13.2.6_fp16.trt"};
   std::string model_path_{
-      "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
-      "480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"};
+  "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
+  "480x288_small/foundation_stereo_10.13.2.6_fp16.trt"};
+  // std::string model_path_{
+      // "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
+      // "480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"};
   std::shared_ptr<ai_framework::TensorData> tensor_data_;
   std::shared_ptr<FoundationStereoImageProcess> image_process_;
   std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
