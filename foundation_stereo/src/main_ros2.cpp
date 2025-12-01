@@ -3,6 +3,8 @@
 //
 #include "kaylordut/log/logger.h"
 #include "rclcpp/rclcpp.hpp"
+#include <pcl_conversions/pcl_conversions.h>
+#include <sensor_msgs/msg/point_cloud2.hpp>
 #if defined(TRT)
 #include "platform/tensorrt/tensorrt.h"
 #elif defined(ONNX)
@@ -13,10 +15,19 @@
 #include "platform/nnrt/nnrt.h"
 #endif
 #include "foundation_stereo_image_process.h"
+#include "pcl/point_cloud.h"
+#include "pcl/point_types.h"
+#include "sensor_msgs/msg/point_cloud2.hpp"
 
 class FoundationStereoNode : public rclcpp::Node {
 public:
   FoundationStereoNode() : Node("foundation_stereo") {
+    // Create point cloud publisher
+    cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
+        "foundation_stereo/point_cloud", 10);
+    KAYLORDUT_LOG_INFO("Point cloud publisher created on topic: "
+                       "foundation_stereo/point_cloud");
+
     baseline_ = 0.1198430;
     K_ = {955.8550, 0.0, 655.0450, 0.0, 955.9950, 363.3060, 0.0, 0.0, 1.0};
     std::stringstream ss;
@@ -82,9 +93,12 @@ private:
   int height_{720};
   int fps_{60};
   std::string device_{"/dev/video0"};
+  // std::string model_path_{
+  //     "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
+  //     "480x288_small/foundation_stereo_10.13.2.6_fp16.trt"};
   std::string model_path_{
       "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
-      "480x288_small/foundation_stereo_10.13.2.6_fp16.trt"};
+      "480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"};
   std::shared_ptr<ai_framework::TensorData> tensor_data_;
   std::shared_ptr<FoundationStereoImageProcess> image_process_;
   std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
@@ -93,6 +107,7 @@ private:
       post_process_result_;
   cv::VideoCapture cap_;
   std::thread thread_;
+  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
   void Run() {
     std::vector<cv::Mat> imgs(2);
     cv::Mat frame;
@@ -111,6 +126,18 @@ private:
           "PostProcess()",
           post_process_result_ = image_process_->PostProcess(
               tensor_data_->get_output_tensor_ptr(), *pre_process_result_));
+
+      // Publish point cloud
+      if (post_process_result_ && post_process_result_->cloud &&
+          !post_process_result_->cloud->empty()) {
+        sensor_msgs::msg::PointCloud2 cloud_msg;
+        pcl::toROSMsg(*post_process_result_->cloud, cloud_msg);
+        cloud_msg.header.stamp = this->now();
+        cloud_msg.header.frame_id = "camera_left_optical_frame";
+        cloud_pub_->publish(cloud_msg);
+        KAYLORDUT_LOG_INFO_ONCE("Publishing point cloud with {} points",
+                                post_process_result_->cloud->size());
+      }
     }
   }
 };
