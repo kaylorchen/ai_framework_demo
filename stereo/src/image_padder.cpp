@@ -15,7 +15,7 @@ constexpr bool kDefaultForceSquare = false;
 
 } // namespace
 
-ImagePadder::ImagePadder(int divis_by, bool force_square)
+ImagePadder::ImagePadder(int divis_by, bool force_square, PaddingMode mode)
     : divis_by_(divis_by), force_square_(force_square), original_size_(0, 0),
       padding_values_(0, 0, 0, 0) {
   if (divis_by_ <= 0) {
@@ -38,9 +38,17 @@ cv::Mat ImagePadder::Pad(const cv::Mat &image, bool symmetric,
   const int left = padding_values_[0];
   const int right = padding_values_[1];
 
-  cv::copyMakeBorder(image, padded_image, top, bottom, left, right,
-                     cv::BORDER_REPLICATE);
-
+  switch (padding_mode_) {
+  case PaddingMode::REPLICATE:
+    cv::copyMakeBorder(image, padded_image, top, bottom, left, right,
+                       cv::BORDER_REPLICATE);
+    break;
+  case PaddingMode::ADAPTIVE:
+    padded_image = AdaptivePadding(image);
+    break;
+  default:
+    throw std::runtime_error("Unknown padding mode");
+  }
   return padded_image;
 }
 
@@ -112,6 +120,32 @@ void ImagePadder::ComputePadding(const cv::Size &image_size, bool symmetric,
     // 更合理的非对称填充：只在右侧和底部填充
     padding_values_ = cv::Vec4i(0, pad_width, 0, pad_height);
   }
+}
+
+cv::Mat ImagePadder::AdaptivePadding(const cv::Mat &image) {
+  int H = image.rows;
+  int W = image.cols;
+
+  int H_new = ((H + divis_by_ - 1) / divis_by_) * divis_by_;
+  int W_new = ((W + divis_by_ - 1) / divis_by_) * divis_by_;
+
+  int pad_h = H_new - H;
+  int pad_w = W_new - W;
+
+  // 计算需要填充的尺寸
+  int top = pad_h / 2;
+  // int bottom = pad_h - top;
+  int left = pad_w / 2;
+  // int right = pad_w - left;
+
+  // 创建一个足够大的空白图像，并用平均值填充
+  cv::Scalar mean_color = cv::mean(image);
+  cv::Mat padded_image(H_new, W_new, image.type(), mean_color);
+
+  // 将原图放置在中心位置
+  image.copyTo(padded_image(cv::Rect(left, top, W, H)));
+
+  return padded_image;
 }
 
 } // namespace image_processing

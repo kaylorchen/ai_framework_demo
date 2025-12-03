@@ -6,6 +6,10 @@
 #include <opencv2/opencv.hpp>
 
 namespace image_processing {
+enum class PaddingMode {
+  REPLICATE, // 使用 cv::BORDER_REPLICATE 的填充方式
+  ADAPTIVE   // 使用类似 image_pad 的自适应填充方式
+};
 
 // Pads images such that dimensions are divisible by specified divisor.
 // Supports both symmetric and asymmetric padding modes with border replication.
@@ -14,7 +18,8 @@ public:
   // Constructs an ImagePadder with given parameters.
   // @param divis_by Divisor for dimension alignment (default: 32).
   // @param force_square Whether to force output to be square (default: false).
-  explicit ImagePadder(int divis_by = 32, bool force_square = false);
+  explicit ImagePadder(int divis_by = 32, bool force_square = false,
+                       PaddingMode mode = PaddingMode::REPLICATE);
 
   // Pads the input image to make dimensions divisible by divis_by.
   // @param image Input image to pad.
@@ -47,11 +52,13 @@ private:
   // @param symmetric Whether to use symmetric padding.
   void ComputePadding(const cv::Size &image_size, bool symmetric,
                       cv::Size target_size = cv::Size());
+  cv::Mat AdaptivePadding(const cv::Mat &image);
 
   int divis_by_;
   bool force_square_;
   cv::Size original_size_;
   cv::Vec4i padding_values_; // [left, right, top, bottom]
+  PaddingMode padding_mode_;
 };
 
 } // namespace image_processing

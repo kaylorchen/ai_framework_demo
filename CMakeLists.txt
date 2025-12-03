@@ -89,15 +89,15 @@ message(STATUS "PCL_INCLUDE_DIRS is ${PCL_INCLUDE_DIRS}")
 message(STATUS "PCL_LIBRARY_DIRS is ${PCL_LIBRARY_DIRS}")
 
 add_executable(foundation_stereo
-        foundation_stereo/src/main_read_files.cpp
-        foundation_stereo/src/foundation_stereo_image_process.cpp
-        foundation_stereo/src/image_padder.cpp)
+        stereo/src/main_read_files.cpp
+        stereo/src/foundation_stereo_image_process.cpp
+        stereo/src/image_padder.cpp)
 target_link_libraries(foundation_stereo ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
 
 add_executable(foundation_stereo_zed
-        foundation_stereo/src/main_zed.cpp
-        foundation_stereo/src/foundation_stereo_image_process.cpp
-        foundation_stereo/src/image_padder.cpp
-        foundation_stereo/src/display_cloud.cpp
+        stereo/src/main_zed.cpp
+        stereo/src/foundation_stereo_image_process.cpp
+        stereo/src/image_padder.cpp
+        stereo/src/display_cloud.cpp
 )
 target_link_libraries(foundation_stereo_zed ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
