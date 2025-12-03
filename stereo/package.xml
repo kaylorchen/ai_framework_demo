@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>hunter_foundation_stereo</name>
+  <name>hunter_stereo</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="kaylor.chen@qq.com">kaylor</maintainer>

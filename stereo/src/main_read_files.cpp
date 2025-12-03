@@ -19,7 +19,7 @@
 #include "stereo_image_process.h"
 #include "yaml-cpp/yaml.h"
 int main(int argc, char **argv) {
-  KAYLORDUT_LOG_INFO("foundation_stereo demo");
+  KAYLORDUT_LOG_INFO("stereo demo");
   auto config = YAML::LoadFile("../config/stereo.yaml");
   std::string model_path = config["model_path"].as<std::string>();
   auto left_image_path = config["image_path"]["left"].as<std::string>();

@@ -23,9 +23,6 @@ int main(int argc, char **argv) {
   auto config = YAML::LoadFile("../config/stereo_zed.yaml");
   std::string model_path = config["model_path"].as<std::string>();
   KAYLORDUT_LOG_INFO("Loading model from {}", model_path);
-  std::string model_type =
-      config["model_type"].as<std::string>("foundation_stereo");
-  KAYLORDUT_LOG_INFO("model_type = {}", model_type);
   auto baseline = config["baseline"].as<float>();
   auto K = config["K"].as<std::vector<float>>();
   std::stringstream ss;

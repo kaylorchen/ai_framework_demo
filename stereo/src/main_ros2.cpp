@@ -21,12 +21,12 @@
 
 class FoundationStereoNode : public rclcpp::Node {
 public:
-  FoundationStereoNode() : Node("foundation_stereo") {
+  FoundationStereoNode() : Node("stereo") {
     // Create point cloud publisher
     cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-        "foundation_stereo/point_cloud", 10);
+        "stereo/point_cloud", 10);
     KAYLORDUT_LOG_INFO("Point cloud publisher created on topic: "
-                       "foundation_stereo/point_cloud");
+                       "stereo/point_cloud");
 
     baseline_ = 0.1198430;
     K_ = {955.8550, 0.0, 655.0450, 0.0, 955.9950, 363.3060, 0.0, 0.0, 1.0};
@@ -94,17 +94,20 @@ private:
   int fps_{60};
   std::string device_{"/dev/video0"};
   std::string model_path_{
-  "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
-  "480x288_small/foundation_stereo_10.13.2.6_fp16.trt"};
+      "/home/kaylor/work/kaylor/ai_framework_demo/model/s2m2/"
+      "S2M2_S_640_480_v2_torch29-10.3-jetson-fp16.trt"};
+  // std::string model_path_{"/home/kaylor/work/kaylor/ai_framework_demo/model/"
+  // "s2m2/S2M2_S_640_480_v2_torch29-10.13.2.6.trt"};
   // std::string model_path_{
-      // "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
-      // "480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"};
+  // "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
+  // "480x288_small/foundation_stereo_10.13.2.6_fp16.trt"};
+  // std::string model_path_{
+  // "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
+  // "480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"};
   std::shared_ptr<ai_framework::TensorData> tensor_data_;
   std::shared_ptr<StereoImageProcess> image_process_;
-  std::shared_ptr<StereoImageProcess::PreProcessResult>
-      pre_process_result_;
-  std::shared_ptr<StereoImageProcess::PostProcessResult>
-      post_process_result_;
+  std::shared_ptr<StereoImageProcess::PreProcessResult> pre_process_result_;
+  std::shared_ptr<StereoImageProcess::PostProcessResult> post_process_result_;
   cv::VideoCapture cap_;
   std::thread thread_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_pub_;
