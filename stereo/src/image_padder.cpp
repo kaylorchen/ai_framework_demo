@@ -12,12 +12,11 @@ namespace image_processing {
 namespace {
 
 constexpr int kDefaultDivisBy = 32;
-constexpr bool kDefaultForceSquare = false;
 
 } // namespace
 
-ImagePadder::ImagePadder(int divis_by, bool force_square, PaddingMode mode)
-    : divis_by_(divis_by), force_square_(force_square), original_size_(0, 0),
+ImagePadder::ImagePadder(int divis_by, PaddingMode mode)
+    : divis_by_(divis_by), original_size_(0, 0),
       padding_values_(0, 0, 0, 0), padding_mode_(mode) {
   if (divis_by_ <= 0) {
     throw std::invalid_argument("divis_by must be positive");
@@ -49,7 +48,7 @@ cv::Mat ImagePadder::Pad(const cv::Mat &image, bool symmetric,
                        cv::BORDER_REPLICATE);
     break;
   case PaddingMode::ADAPTIVE:
-    padded_image = AdaptivePadding(image);
+    padded_image = AdaptivePadding(image, target_size);
     break;
   default:
     throw std::runtime_error("Unknown padding mode");
@@ -93,26 +92,27 @@ void ImagePadder::ComputePadding(const cv::Size &image_size, bool symmetric,
   int pad_height = 0;
   int pad_width = 0;
   if (target_size.empty()) {
-    if (force_square_) {
-      const int max_side = std::max(height, width);
-      pad_height = ((max_side / divis_by_) + 1) * divis_by_ - height;
-      pad_width = ((max_side / divis_by_) + 1) * divis_by_ - width;
-    } else {
-      pad_height =
-          (((height / divis_by_) + 1) * divis_by_ - height) % divis_by_;
-      pad_width = (((width / divis_by_) + 1) * divis_by_ - width) % divis_by_;
-    }
+    // 使用 divis_by 对齐
+    pad_height =
+        (((height / divis_by_) + 1) * divis_by_ - height) % divis_by_;
+    pad_width = (((width / divis_by_) + 1) * divis_by_ - width) % divis_by_;
   } else {
-    if (force_square_) {
-      auto pad = std::max(target_size.height - image_size.height,
-                          target_size.width - image_size.width);
-      pad_width = pad;
-      pad_height = pad;
-    } else {
-      pad_height = target_size.height - image_size.height;
-      pad_width = target_size.width - image_size.width;
+    // 检查 target_size 是否能被 divis_by 整除
+    if (target_size.height % divis_by_ != 0 || target_size.width % divis_by_ != 0) {
+      KAYLORDUT_LOG_ERROR(
+          "Target size ({}x{}) is not aligned to divis_by={}. "
+          "Height must be divisible by {} (current: {} % {} = {}), "
+          "Width must be divisible by {} (current: {} % {} = {})",
+          target_size.width, target_size.height, divis_by_,
+          divis_by_, target_size.height, divis_by_, target_size.height % divis_by_,
+          divis_by_, target_size.width, divis_by_, target_size.width % divis_by_);
+      std::exit(EXIT_FAILURE);
     }
+    // 使用 target_size 计算 padding
+    pad_height = target_size.height - image_size.height;
+    pad_width = target_size.width - image_size.width;
   }
+  KAYLORDUT_LOG_INFO_ONCE("pad_height: {}, pad_width: {}", pad_height, pad_width);
   if (symmetric) {
     // 真正的对称填充：四边均匀分配
     int pad_left = pad_width / 2;
@@ -127,12 +127,20 @@ void ImagePadder::ComputePadding(const cv::Size &image_size, bool symmetric,
   }
 }
 
-cv::Mat ImagePadder::AdaptivePadding(const cv::Mat &image) {
+cv::Mat ImagePadder::AdaptivePadding(const cv::Mat &image, cv::Size target_size) {
   int H = image.rows;
   int W = image.cols;
 
-  int H_new = ((H + divis_by_ - 1) / divis_by_) * divis_by_;
-  int W_new = ((W + divis_by_ - 1) / divis_by_) * divis_by_;
+  // 如果没有提供目标尺寸，使用 divis_by 对齐
+  int H_new, W_new;
+  if (target_size.empty()) {
+    H_new = ((H + divis_by_ - 1) / divis_by_) * divis_by_;
+    W_new = ((W + divis_by_ - 1) / divis_by_) * divis_by_;
+  } else {
+    // 使用指定的目标尺寸
+    H_new = target_size.height;
+    W_new = target_size.width;
+  }
 
   int pad_h = H_new - H;
   int pad_w = W_new - W;

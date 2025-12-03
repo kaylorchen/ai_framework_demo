@@ -2,6 +2,8 @@
 // Created by kaylor on 11/25/25.
 //
 #include "kaylordut/log/logger.h"
+
+#include <filesystem>
 #if defined(TRT)
 #include "platform/tensorrt/tensorrt.h"
 #elif defined(ONNX)
@@ -68,9 +70,10 @@ int main(int argc, char **argv) {
   }
   auto res = image_process.PostProcess(tensor_data.get_output_tensor_ptr(),
                                        *pre_process_result);
-  pcl::io::savePCDFile("foundation_stereo_cloud.pcd", *res->cloud);
-  pcl::io::savePLYFile("foundation_stereo_cloud.ply", *res->cloud);
-  cv::imshow("depth_map", res->depth_img);
-  cv::waitKey(5000);
+  std::string filename = std::filesystem::path(model_path).stem().string();
+  pcl::io::savePCDFile(filename + ".pcd", *res->cloud);
+  pcl::io::savePLYFile(filename + ".ply", *res->cloud);
+  // cv::imshow("depth_map", res->depth_img);
+  // cv::waitKey(5000);
   return 0;
 }

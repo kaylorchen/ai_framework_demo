@@ -6,7 +6,6 @@
 #model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"
 #model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/480x288_small/foundation_stereo_10.13.2.6_fp16.trt"
 model_path: "/home/kaylor/work/kaylor/ai_framework_demo/model/s2m2/S2M2_S_640_480_v2_torch29-10.13.2.6.trt"
-model_type: "s2m2"
 #model_type: "foundation_stereo"
 device: "/dev/video0"
 width: 2560

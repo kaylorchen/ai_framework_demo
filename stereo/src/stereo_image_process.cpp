@@ -19,11 +19,11 @@ FoundationStereoImageProcess::FoundationStereoImageProcess(
   if (size == sizeof(float)) {
     input_data_type_ = CV_32FC3;
     padder_ = std::make_shared<image_processing::ImagePadder>(
-        32, false, image_processing::PaddingMode::REPLICATE);
+        32, image_processing::PaddingMode::REPLICATE);
   } else if (size == sizeof(uint8_t)) {
     input_data_type_ = CV_8UC3;
     padder_ = std::make_shared<image_processing::ImagePadder>(
-        32, false, image_processing::PaddingMode::ADAPTIVE);
+        32, image_processing::PaddingMode::ADAPTIVE);
   }
 }
 
@@ -86,8 +86,8 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
                             aspect_ratio_img.resized_img.cols,
                             aspect_ratio_img.resized_img.rows, img_padded.cols,
                             img_padded.rows);
-    cv::imwrite("pad.png", img_padded);
-    exit(0);
+    // cv::imwrite("pad.png", img_padded);
+    // exit(0);
     cv::Mat img_resized;
     if (img_padded.size() != cv::Size(width_, height_)) {
       cv::resize(img_padded, img_resized, cv::Size(width_, height_));
@@ -97,7 +97,7 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
     KAYLORDUT_LOG_INFO_ONCE("img_padded_size = {}x{} --> target_size = {}x{}",
                             img_padded.cols, img_padded.rows, width_, height_);
 
-    FillData(tensors, i, img_resized);
+    FillData(tensors, i, img_resized, input_data_type_);
   }
   return result;
 }
