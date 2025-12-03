@@ -4,6 +4,7 @@
 
 #include "image_padder.h"
 
+#include "kaylordut/log/logger.h"
 #include <stdexcept>
 
 namespace image_processing {
@@ -17,7 +18,7 @@ constexpr bool kDefaultForceSquare = false;
 
 ImagePadder::ImagePadder(int divis_by, bool force_square, PaddingMode mode)
     : divis_by_(divis_by), force_square_(force_square), original_size_(0, 0),
-      padding_values_(0, 0, 0, 0) {
+      padding_values_(0, 0, 0, 0), padding_mode_(mode) {
   if (divis_by_ <= 0) {
     throw std::invalid_argument("divis_by must be positive");
   }
@@ -28,6 +29,8 @@ cv::Mat ImagePadder::Pad(const cv::Mat &image, bool symmetric,
   if (image.empty()) {
     throw std::invalid_argument("Input image is empty");
   }
+  KAYLORDUT_LOG_INFO_ONCE("target size: {}x{}", target_size.width,
+                          target_size.height);
 
   original_size_ = image.size();
   ComputePadding(original_size_, symmetric, target_size);
@@ -37,6 +40,8 @@ cv::Mat ImagePadder::Pad(const cv::Mat &image, bool symmetric,
   const int bottom = padding_values_[3];
   const int left = padding_values_[0];
   const int right = padding_values_[1];
+  KAYLORDUT_LOG_INFO_ONCE("padding values: top:{} bottom:{} left:{} right:{}",
+                          top, bottom, left, right);
 
   switch (padding_mode_) {
   case PaddingMode::REPLICATE:

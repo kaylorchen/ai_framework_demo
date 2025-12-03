@@ -19,9 +19,13 @@
 #include "yaml-cpp/yaml.h"
 
 int main(int argc, char **argv) {
-  KAYLORDUT_LOG_INFO("foundation_stereo demo");
-  auto config = YAML::LoadFile("../config/foundation_stereo_zed.yaml");
+  KAYLORDUT_LOG_INFO("Stereo Demo");
+  auto config = YAML::LoadFile("../config/stereo_zed.yaml");
   std::string model_path = config["model_path"].as<std::string>();
+  KAYLORDUT_LOG_INFO("Loading model from {}", model_path);
+  std::string model_type =
+      config["model_type"].as<std::string>("foundation_stereo");
+  KAYLORDUT_LOG_INFO("model_type = {}", model_type);
   auto baseline = config["baseline"].as<float>();
   auto K = config["K"].as<std::vector<float>>();
   std::stringstream ss;
@@ -41,15 +45,7 @@ int main(int argc, char **argv) {
   std::string device = config["device"].as<std::string>("/dev/video0");
   KAYLORDUT_LOG_INFO("device = {},fps = {}, width = {}, height = {}", device,
                      fps, width, height);
-  auto capture = cv::VideoCapture(
-      "v4l2src device=" + device + " ! video/x-raw,format=YUY2,width=" +
-          std::to_string(width) + ",height=" + std::to_string(height) +
-          ",framerate=" + std::to_string(fps) + "/1 ! videoconvert ! appsink",
-      cv::CAP_GSTREAMER);
-  if (!capture.isOpened()) {
-    KAYLORDUT_LOG_ERROR("Failed to open camera");
-    return -1;
-  }
+
 #if defined(TRT)
   auto ai_instance = std::make_shared<TensorRT>();
 #elif defined(ONNX)
@@ -72,6 +68,15 @@ int main(int argc, char **argv) {
   DisplayCloud display_cloud;
   std::shared_ptr<FoundationStereoImageProcess::PostProcessResult>
       post_process_result;
+  auto capture = cv::VideoCapture(
+      "v4l2src device=" + device + " ! video/x-raw,format=YUY2,width=" +
+          std::to_string(width) + ",height=" + std::to_string(height) +
+          ",framerate=" + std::to_string(fps) + "/1 ! videoconvert ! appsink",
+      cv::CAP_GSTREAMER);
+  if (!capture.isOpened()) {
+    KAYLORDUT_LOG_ERROR("Failed to open camera");
+    return -1;
+  }
   while (true) {
     if (!capture.read(frame)) {
       KAYLORDUT_LOG_ERROR("Failed to read frame");

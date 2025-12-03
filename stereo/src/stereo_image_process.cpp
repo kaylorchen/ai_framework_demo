@@ -9,10 +9,59 @@
 FoundationStereoImageProcess::FoundationStereoImageProcess(
     const ai_framework::Config &config, const std::vector<float> &K,
     float baseline) {
-  width_ = config.input_layer_shape.at("left").at(3);
-  height_ = config.input_layer_shape.at("left").at(2);
+  std::string left = config.input_index_to_name.at(0);
+  width_ = config.input_layer_shape.at(left).at(3);
+  height_ = config.input_layer_shape.at(left).at(2);
   K_ = K;
   baseline_ = baseline;
+  auto size = config.input_single_element_size.at(left);
+  if (size == sizeof(float)) {
+    input_data_type_ = CV_32FC3;
+    padder_ = std::make_shared<image_processing::ImagePadder>(
+        32, false, image_processing::PaddingMode::REPLICATE);
+  } else if (size == sizeof(uint8_t)) {
+    input_data_type_ = CV_8UC3;
+    padder_ = std::make_shared<image_processing::ImagePadder>(
+        32, false, image_processing::PaddingMode::ADAPTIVE);
+  }
+}
+
+void FoundationStereoImageProcess::FillData(void **&tensors,
+                                            long unsigned int i,
+                                            cv::Mat img_resized,
+                                            int data_type) {
+  // 转换为指定类型
+  cv::Mat img;
+  if (img_resized.type() == data_type) {
+    img = img_resized;
+  } else {
+    img_resized.convertTo(img, data_type, 1.0f);
+  }
+
+  // 分离通道
+  std::vector<cv::Mat> bgr_channels;
+  cv::split(img, bgr_channels);
+
+  // 使用 uint8_t* 作为通用字节指针（支持指针算术）
+  uint8_t *dst = static_cast<uint8_t *>(tensors[i]);
+
+  int size_per_pixel;
+  if (data_type == CV_32FC3) {
+    size_per_pixel = sizeof(float);
+  } else if (data_type == CV_8UC3) {
+    size_per_pixel = sizeof(uint8_t);
+  } else {
+    // 可选：抛出异常或返回错误
+    throw std::invalid_argument("Unsupported data_type");
+  }
+
+  const int total_pixels = img.total();
+  const int channel_size = total_pixels * size_per_pixel;
+
+  // 按 RGB 顺序写入：R, G, B
+  memcpy(dst, bgr_channels[2].data, channel_size);                    // R
+  memcpy(dst + channel_size, bgr_channels[1].data, channel_size);     // G
+  memcpy(dst + channel_size * 2, bgr_channels[0].data, channel_size); // B
 }
 
 std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
@@ -31,7 +80,7 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
         resize_res.original_img.cols, resize_res.original_img.rows,
         resize_res.resized_img.cols, resize_res.resized_img.rows);
     cv::Mat img_padded =
-        padder_.Pad(resize_res.resized_img, true, cv::Size(width_, height_));
+        padder_->Pad(resize_res.resized_img, true, cv::Size(width_, height_));
     KAYLORDUT_LOG_INFO_ONCE("resized_img_size = {}x{} --> padded_size = {}x{}",
                             resize_res.resized_img.cols,
                             resize_res.resized_img.rows, img_padded.cols,
@@ -45,26 +94,7 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
     KAYLORDUT_LOG_INFO_ONCE("img_padded_size = {}x{} --> target_size = {}x{}",
                             img_padded.cols, img_padded.rows, width_, height_);
 
-    // 转换为float
-    cv::Mat img_float;
-    img_resized.convertTo(img_float, CV_32FC3, 1.0f);
-
-    // 分离通道（OpenCV优化过的操作）
-    std::vector<cv::Mat> bgr_channels;
-    cv::split(img_float, bgr_channels);
-
-    auto dst = reinterpret_cast<float *>(tensors[i]);
-    const int total_pixels = img_float.total();
-
-    // 注意：bgr_channels[0]=B, [1]=G, [2]=R
-    // 我们需要RGB顺序，所以bgr_channels[2]是R，[1]是G，[0]是B
-
-    // 使用memcpy进行批量复制（最高效）
-    memcpy(dst, bgr_channels[2].data, total_pixels * sizeof(float)); // R
-    memcpy(dst + total_pixels, bgr_channels[1].data,
-           total_pixels * sizeof(float)); // G
-    memcpy(dst + total_pixels * 2, bgr_channels[0].data,
-           total_pixels * sizeof(float)); // B
+    FillData(tensors, i, img_resized);
   }
   return result;
 }
@@ -77,7 +107,7 @@ FoundationStereoImageProcess::PostProcess(
   auto inference_output = cv::Mat(height_, width_, CV_32FC1, tensors[0]);
   KAYLORDUT_LOG_INFO_ONCE("inference_output_size = {}x{}",
                           inference_output.cols, inference_output.rows);
-  result->disparity_img = padder_.Unpad(inference_output);
+  result->disparity_img = padder_->Unpad(inference_output);
   KAYLORDUT_LOG_INFO_ONCE("disparity_img_size = {}x{}",
                           result->disparity_img.cols,
                           result->disparity_img.rows);

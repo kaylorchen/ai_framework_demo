@@ -38,7 +38,8 @@ private:
   int height_;
   std::vector<float> K_;
   float baseline_;
-  image_processing::ImagePadder padder_;
+  std::shared_ptr<image_processing::ImagePadder> padder_;
+  int input_data_type_;
   void RemoveInvisiblePoints(cv::Mat &disp);
   void ComputeDepth(cv::Mat &depth, const cv::Mat &disp, float K00,
                     float baseline);
@@ -47,4 +48,6 @@ private:
                          std::vector<float> &K);
   struct PreProcessResult ResizeKeepAspectRatio(const cv::Mat &input,
                                                 const cv::Size &target_size);
+  void FillData(void **&tensors, long unsigned int i, cv::Mat img_resized,
+                int date_type = CV_32FC3);
 };
