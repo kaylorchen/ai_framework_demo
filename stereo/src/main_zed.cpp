@@ -59,14 +59,14 @@ int main(int argc, char **argv) {
   ai_instance->PrintLayerInfo();
   ai_framework::TensorData tensor_data(ai_instance->get_config());
   ai_instance->BindInputAndOutput(tensor_data);
-  FoundationStereoImageProcess image_process(ai_instance->get_config(), K,
+  StereoImageProcess image_process(ai_instance->get_config(), K,
                                              baseline);
-  std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
+  std::shared_ptr<StereoImageProcess::PreProcessResult>
       pre_process_result;
   std::vector<cv::Mat> imgs(2);
   cv::Mat frame;
   DisplayCloud display_cloud;
-  std::shared_ptr<FoundationStereoImageProcess::PostProcessResult>
+  std::shared_ptr<StereoImageProcess::PostProcessResult>
       post_process_result;
   auto capture = cv::VideoCapture(
       "v4l2src device=" + device + " ! video/x-raw,format=YUY2,width=" +

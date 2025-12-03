@@ -9,7 +9,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-class FoundationStereoImageProcess {
+class StereoImageProcess {
 public:
   struct PostProcessResult {
     cv::Mat original_img;
@@ -24,11 +24,11 @@ public:
     double scale;
   };
 
-  FoundationStereoImageProcess() = delete;
-  FoundationStereoImageProcess(const ai_framework::Config &config,
+  StereoImageProcess() = delete;
+  StereoImageProcess(const ai_framework::Config &config,
                                const std::vector<float> &K, float baseline,
                                float doffs = 0.0f);
-  ~FoundationStereoImageProcess() = default;
+  ~StereoImageProcess() = default;
   std::shared_ptr<PreProcessResult> PreProcess(const std::vector<cv::Mat> &imgs,
                                                void **&tensors);
   std::shared_ptr<PostProcessResult>

@@ -6,7 +6,7 @@
 
 #include <kaylordut/log/logger.h>
 
-FoundationStereoImageProcess::FoundationStereoImageProcess(
+StereoImageProcess::StereoImageProcess(
     const ai_framework::Config &config, const std::vector<float> &K,
     float baseline, float doffs) {
   std::string left = config.input_index_to_name.at(0);
@@ -27,7 +27,7 @@ FoundationStereoImageProcess::FoundationStereoImageProcess(
   }
 }
 
-void FoundationStereoImageProcess::FillData(void **&tensors,
+void StereoImageProcess::FillData(void **&tensors,
                                             long unsigned int i,
                                             cv::Mat img_resized,
                                             int data_type) {
@@ -65,8 +65,8 @@ void FoundationStereoImageProcess::FillData(void **&tensors,
   memcpy(dst + channel_size * 2, bgr_channels[0].data, channel_size); // B
 }
 
-std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
-FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
+std::shared_ptr<StereoImageProcess::PreProcessResult>
+StereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
                                          void **&tensors) {
   auto result = std::make_shared<PreProcessResult>();
   for (long unsigned int i = 0; i < imgs.size(); ++i) {
@@ -102,8 +102,8 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
   return result;
 }
 
-std::shared_ptr<FoundationStereoImageProcess::PostProcessResult>
-FoundationStereoImageProcess::PostProcess(
+std::shared_ptr<StereoImageProcess::PostProcessResult>
+StereoImageProcess::PostProcess(
     void **&tensors, const PreProcessResult &pre_process_result) {
   auto result = std::make_shared<PostProcessResult>();
   result->original_img = pre_process_result.original_img;
@@ -129,7 +129,7 @@ FoundationStereoImageProcess::PostProcess(
   return result;
 }
 
-void FoundationStereoImageProcess::RemoveInvisiblePoints(cv::Mat &disp) {
+void StereoImageProcess::RemoveInvisiblePoints(cv::Mat &disp) {
   if (disp.empty())
     return;
   cv::parallel_for_(cv::Range(0, disp.rows), [&](const cv::Range &range) {
@@ -145,7 +145,7 @@ void FoundationStereoImageProcess::RemoveInvisiblePoints(cv::Mat &disp) {
   });
 }
 
-void FoundationStereoImageProcess::ComputeDepth(cv::Mat &depth,
+void StereoImageProcess::ComputeDepth(cv::Mat &depth,
                                                 const cv::Mat &disp, float K00,
                                                 float baseline, float doffs) {
   if (disp.empty())
@@ -171,7 +171,7 @@ void FoundationStereoImageProcess::ComputeDepth(cv::Mat &depth,
 }
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr
-FoundationStereoImageProcess::DepthImageToPointCloud(const cv::Mat &depth_img,
+StereoImageProcess::DepthImageToPointCloud(const cv::Mat &depth_img,
                                                      const cv::Mat &rgb_img,
                                                      std::vector<float> &K) {
   if (K.size() != 9) {
@@ -205,8 +205,8 @@ FoundationStereoImageProcess::DepthImageToPointCloud(const cv::Mat &depth_img,
   return cloud;
 }
 
-struct FoundationStereoImageProcess::PreProcessResult
-FoundationStereoImageProcess::ResizeKeepAspectRatio(
+struct StereoImageProcess::PreProcessResult
+StereoImageProcess::ResizeKeepAspectRatio(
     const cv::Mat &input, const cv::Size &target_size) {
   cv::Mat output;
   double scale = std::min((double)target_size.width / input.cols,

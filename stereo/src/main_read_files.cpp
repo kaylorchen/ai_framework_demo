@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
   ai_instance->PrintLayerInfo();
   ai_framework::TensorData tensor_data(ai_instance->get_config());
   std::vector<cv::Mat> imgs = {left_image, right_image};
-  FoundationStereoImageProcess image_process(ai_instance->get_config(), K,
+  StereoImageProcess image_process(ai_instance->get_config(), K,
                                              baseline, doffs);
   auto pre_process_result =
       image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());

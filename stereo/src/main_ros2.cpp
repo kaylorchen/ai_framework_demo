@@ -57,7 +57,7 @@ public:
     tensor_data_ =
         std::make_shared<ai_framework::TensorData>(ai_instance_->get_config());
     ai_instance_->BindInputAndOutput(*tensor_data_);
-    image_process_ = std::make_shared<FoundationStereoImageProcess>(
+    image_process_ = std::make_shared<StereoImageProcess>(
         ai_instance_->get_config(), K_, baseline_);
     cap_ = cv::VideoCapture(
         "v4l2src device=" + device_ + " ! video/x-raw,format=YUY2,width=" +
@@ -100,10 +100,10 @@ private:
       // "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/"
       // "480x288_small/foundation_stereo_jetson_10.3.0.30_fp16.trt"};
   std::shared_ptr<ai_framework::TensorData> tensor_data_;
-  std::shared_ptr<FoundationStereoImageProcess> image_process_;
-  std::shared_ptr<FoundationStereoImageProcess::PreProcessResult>
+  std::shared_ptr<StereoImageProcess> image_process_;
+  std::shared_ptr<StereoImageProcess::PreProcessResult>
       pre_process_result_;
-  std::shared_ptr<FoundationStereoImageProcess::PostProcessResult>
+  std::shared_ptr<StereoImageProcess::PostProcessResult>
       post_process_result_;
   cv::VideoCapture cap_;
   std::thread thread_;
