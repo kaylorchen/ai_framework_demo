@@ -26,8 +26,10 @@ int main(int argc, char **argv) {
   KAYLORDUT_LOG_INFO("right_image_path = {}", right_image_path);
   auto baseline = config["baseline"].as<float>();
   auto K = config["K"].as<std::vector<float>>();
+  auto doffs = config["doffs"].as<float>();
   std::stringstream ss;
-  ss << std::endl << "baseline = " << baseline << std::endl;
+  ss << std::endl
+     << "baseline = " << baseline << " doffs = " << doffs << std::endl;
   ss << "K = " << std::endl;
   for (int i = 0; i < 3; ++i) {
     ss << "[ ";
@@ -57,7 +59,7 @@ int main(int argc, char **argv) {
   ai_framework::TensorData tensor_data(ai_instance->get_config());
   std::vector<cv::Mat> imgs = {left_image, right_image};
   FoundationStereoImageProcess image_process(ai_instance->get_config(), K,
-                                             baseline);
+                                             baseline, doffs);
   auto pre_process_result =
       image_process.PreProcess(imgs, tensor_data.get_input_tensor_ptr());
   ai_instance->BindInputAndOutput(tensor_data);

@@ -8,12 +8,13 @@
 
 FoundationStereoImageProcess::FoundationStereoImageProcess(
     const ai_framework::Config &config, const std::vector<float> &K,
-    float baseline) {
+    float baseline, float doffs) {
   std::string left = config.input_index_to_name.at(0);
   width_ = config.input_layer_shape.at(left).at(3);
   height_ = config.input_layer_shape.at(left).at(2);
   K_ = K;
   baseline_ = baseline;
+  doffs_ = doffs;
   auto size = config.input_single_element_size.at(left);
   if (size == sizeof(float)) {
     input_data_type_ = CV_32FC3;
@@ -69,22 +70,24 @@ FoundationStereoImageProcess::PreProcess(const std::vector<cv::Mat> &imgs,
                                          void **&tensors) {
   auto result = std::make_shared<PreProcessResult>();
   for (long unsigned int i = 0; i < imgs.size(); ++i) {
-    auto resize_res =
+    auto aspect_ratio_img =
         ResizeKeepAspectRatio(imgs.at(i), cv::Size(width_, height_));
     if (i == 0) {
-      *result = resize_res;
-      KAYLORDUT_LOG_INFO_ONCE("resized scale = {}", resize_res.scale);
+      *result = aspect_ratio_img;
+      KAYLORDUT_LOG_INFO_ONCE("resized scale = {}", aspect_ratio_img.scale);
     }
     KAYLORDUT_LOG_INFO_ONCE(
-        "original_img_size = {}x{} --> resized_size = {}x{}",
-        resize_res.original_img.cols, resize_res.original_img.rows,
-        resize_res.resized_img.cols, resize_res.resized_img.rows);
+        "original_img_size = {}x{} --> aspect_ratio_size = {}x{}",
+        aspect_ratio_img.original_img.cols, aspect_ratio_img.original_img.rows,
+        aspect_ratio_img.resized_img.cols, aspect_ratio_img.resized_img.rows);
     cv::Mat img_padded =
-        padder_->Pad(resize_res.resized_img, true, cv::Size(width_, height_));
-    KAYLORDUT_LOG_INFO_ONCE("resized_img_size = {}x{} --> padded_size = {}x{}",
-                            resize_res.resized_img.cols,
-                            resize_res.resized_img.rows, img_padded.cols,
+        padder_->Pad(aspect_ratio_img.resized_img, true, cv::Size(width_, height_));
+    KAYLORDUT_LOG_INFO_ONCE("aspect_ratio_img_size = {}x{} --> padded_size = {}x{}",
+                            aspect_ratio_img.resized_img.cols,
+                            aspect_ratio_img.resized_img.rows, img_padded.cols,
                             img_padded.rows);
+    cv::imwrite("pad.png", img_padded);
+    exit(0);
     cv::Mat img_resized;
     if (img_padded.size() != cv::Size(width_, height_)) {
       cv::resize(img_padded, img_resized, cv::Size(width_, height_));
@@ -118,7 +121,9 @@ FoundationStereoImageProcess::PostProcess(
   K[4] *= pre_process_result.scale;
   K[2] *= pre_process_result.scale;
   K[5] *= pre_process_result.scale;
-  ComputeDepth(result->depth_img, result->disparity_img, K[0], baseline_);
+  float doffs = pre_process_result.scale * doffs_;
+  ComputeDepth(result->depth_img, result->disparity_img, K[0], baseline_,
+               doffs);
   result->cloud = DepthImageToPointCloud(result->depth_img,
                                          pre_process_result.resized_img, K);
   return result;
@@ -142,11 +147,11 @@ void FoundationStereoImageProcess::RemoveInvisiblePoints(cv::Mat &disp) {
 
 void FoundationStereoImageProcess::ComputeDepth(cv::Mat &depth,
                                                 const cv::Mat &disp, float K00,
-                                                float baseline) {
+                                                float baseline, float doffs) {
   if (disp.empty())
     return;
   // 预计算常量
-  float scale = K00 * baseline;
+  float const_number = K00 * baseline;
   cv::parallel_for_(cv::Range(0, disp.rows), [&](const cv::Range &range) {
     for (int y = range.start; y < range.end; y++) {
       const float *disp_ptr = disp.ptr<float>(y);
@@ -156,7 +161,7 @@ void FoundationStereoImageProcess::ComputeDepth(cv::Mat &depth,
         float d = disp_ptr[x];
         // 避免除以零和无效视差
         if (d > 0 && std::isfinite(d)) {
-          depth_ptr[x] = scale / d;
+          depth_ptr[x] = const_number / (d + doffs);
         } else {
           depth_ptr[x] = 0.0f; // 或者设为其他无效值
         }

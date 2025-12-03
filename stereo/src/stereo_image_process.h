@@ -26,7 +26,8 @@ public:
 
   FoundationStereoImageProcess() = delete;
   FoundationStereoImageProcess(const ai_framework::Config &config,
-                               const std::vector<float> &K, float baseline);
+                               const std::vector<float> &K, float baseline,
+                               float doffs = 0.0f);
   ~FoundationStereoImageProcess() = default;
   std::shared_ptr<PreProcessResult> PreProcess(const std::vector<cv::Mat> &imgs,
                                                void **&tensors);
@@ -38,11 +39,12 @@ private:
   int height_;
   std::vector<float> K_;
   float baseline_;
+  float doffs_{0.0f};
   std::shared_ptr<image_processing::ImagePadder> padder_;
   int input_data_type_;
   void RemoveInvisiblePoints(cv::Mat &disp);
   void ComputeDepth(cv::Mat &depth, const cv::Mat &disp, float K00,
-                    float baseline);
+                    float baseline, float doffs = 0.0f);
   pcl::PointCloud<pcl::PointXYZRGB>::Ptr
   DepthImageToPointCloud(const cv::Mat &depth, const cv::Mat &rgb,
                          std::vector<float> &K);

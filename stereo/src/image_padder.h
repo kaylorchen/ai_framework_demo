@@ -8,7 +8,8 @@
 namespace image_processing {
 enum class PaddingMode {
   REPLICATE, // 使用 cv::BORDER_REPLICATE 的填充方式
-  ADAPTIVE   // 使用类似 image_pad 的自适应填充方式
+  ADAPTIVE,   // 使用类似 image_pad 的自适应填充方式
+  FIXED_SIZE
 };
 
 // Pads images such that dimensions are divisible by specified divisor.

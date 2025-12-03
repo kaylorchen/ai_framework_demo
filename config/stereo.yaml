@@ -1,13 +1,22 @@
 #model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo.trt"
-model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/480x288_small/foundation_stereo_10.13.2.6_fp16.trt"
-#model_path: "/home/kaylor/work/kaylor/ai_framework_demo/model/s2m2/S2M2_S_640_480_v2_torch29-10.13.2.6.trt"
+#model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/480x288_small/foundation_stereo_10.13.2.6_fp16.trt"
+model_path: "/home/kaylor/work/kaylor/ai_framework_demo/model/s2m2/S2M2_L_640_480_v2_torch29-10.13.2.6.trt"
 #model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/normal/foundation_stereo.trt"
 #model_path: "/home/kaylor/work/nvidia/FoundationStereo/pretrained_models/small/foundation_stereo.trt"
 #model_path: "/home/kaylor/work/kaylor/nvidia/FoundationStereo/pretrained_models/normal_540/foundation_stereo.trt"
+#image_path:
+#  left: "../model/image/left.png"
+#  right: "../model/image/right.png"
+#baseline: 0.063
+#K: [754.6680908203125, 0.0, 489.3794860839844, 0.0,
+#    754.6680908203125, 265.16162109375,
+#    0.0, 0.0, 1.0]
+
 image_path:
-  left: "../model/image/left.png"
-  right: "../model/image/right.png"
-baseline: 0.063
-K: [754.6680908203125, 0.0, 489.3794860839844, 0.0,
-    754.6680908203125, 265.16162109375,
+  left: "../model/image/bicycle_0.png"
+  right: "../model/image/bicycle_1.png"
+baseline: 0.173577
+doffs: 163.863
+K: [3896.34, 0.0, 1064.836,
+    0.0, 3896.34, 976.456,
     0.0, 0.0, 1.0]
