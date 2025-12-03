@@ -14,7 +14,7 @@
 #elif defined(NNRT)
 #include "platform/nnrt/nnrt.h"
 #endif
-#include "foundation_stereo_image_process.h"
+#include "stereo_image_process.h"
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
 #include "sensor_msgs/msg/point_cloud2.hpp"

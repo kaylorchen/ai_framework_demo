@@ -40,7 +40,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-add_executable(${PROJECT_NAME}_node src/main_ros2.cpp src/foundation_stereo_image_process.cpp src/image_padder.cpp)
+add_executable(${PROJECT_NAME}_node src/main_ros2.cpp src/stereo_image_process.cpp src/image_padder.cpp)
 ament_target_dependencies(${PROJECT_NAME}_node rclcpp sensor_msgs pcl_ros pcl_conversions)
 target_link_libraries(${PROJECT_NAME}_node ${AI_LIB} ${OpenCV_LIBS} ${kaylordut_LIBS})
 target_include_directories(${PROJECT_NAME}_node PUBLIC ${OpenCV_INCLUDE_DIRS})

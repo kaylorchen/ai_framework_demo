@@ -11,10 +11,10 @@
 #elif defined(NNRT)
 #include "platform/nnrt/nnrt.h"
 #endif
-#include "foundation_stereo_image_process.h"
 #include "opencv2/opencv.hpp"
 #include "pcl/io/pcd_io.h"
 #include "pcl/io/ply_io.h"
+#include "stereo_image_process.h"
 #include "yaml-cpp/yaml.h"
 int main(int argc, char **argv) {
   KAYLORDUT_LOG_INFO("foundation_stereo demo");

@@ -12,7 +12,7 @@
 #include "platform/nnrt/nnrt.h"
 #endif
 #include "display_cloud.h"
-#include "foundation_stereo_image_process.h"
+#include "stereo_image_process.h"
 #include "opencv2/opencv.hpp"
 #include "pcl/io/pcd_io.h"
 #include "pcl/io/ply_io.h"

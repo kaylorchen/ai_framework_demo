@@ -90,13 +90,13 @@ message(STATUS "PCL_LIBRARY_DIRS is ${PCL_LIBRARY_DIRS}")
 
 add_executable(foundation_stereo
         stereo/src/main_read_files.cpp
-        stereo/src/foundation_stereo_image_process.cpp
+        stereo/src/stereo_image_process.cpp
         stereo/src/image_padder.cpp)
 target_link_libraries(foundation_stereo ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
 
 add_executable(foundation_stereo_zed
         stereo/src/main_zed.cpp
-        stereo/src/foundation_stereo_image_process.cpp
+        stereo/src/stereo_image_process.cpp
         stereo/src/image_padder.cpp
         stereo/src/display_cloud.cpp
 )

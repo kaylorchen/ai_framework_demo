@@ -2,7 +2,7 @@
 // Created by kaylor on 11/25/25.
 //
 
-#include "foundation_stereo_image_process.h"
+#include "stereo_image_process.h"
 
 #include <kaylordut/log/logger.h>
 
