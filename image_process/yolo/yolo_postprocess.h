@@ -16,6 +16,7 @@ class YoloPostProcess {
      DETECTION_V13,
      POSE_V8,
      SEGMENT_V11,
+     DETECTION_V26,
    };
    struct Bbox {
      float x1;

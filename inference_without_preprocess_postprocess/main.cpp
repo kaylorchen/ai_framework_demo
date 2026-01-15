@@ -34,14 +34,21 @@ int main(int argc, char *argv[]) {
   instance->BindInputAndOutput(*tensor_data);
   auto input = tensor_data->get_input_tensor_ptr();
   auto output = tensor_data->get_output_tensor_ptr();
-  auto input_data = static_cast<float *>(input[0]);
-  auto output_data = static_cast<float *>(output[0]);
-  for (int i = 0; i < 300; ++i) {
-    input_data[i] = i;
+
+  const int num_iterations = 1000;
+  double total_time = 0.0;
+
+  for (int i = 0; i < num_iterations; ++i) {
+    auto start = std::chrono::high_resolution_clock::now();
+    KAYLORDUT_TIME_COST_INFO("Inference", instance->DoInference(););
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration = end - start;
+    total_time += duration.count();
   }
-  KAYLORDUT_TIME_COST_INFO("Inference", instance->DoInference());
-  for (int i = 0; i < 100; ++i) {
-    KAYLORDUT_LOG_INFO("output_data[{}] = {}", i, output_data[i]);
-  }
+
+  double average_time = total_time / num_iterations;
+
+  KAYLORDUT_LOG_INFO("Inference loop {} times, average inference time: {:.3f} ms", num_iterations,
+                     average_time);
   return 0;
 }

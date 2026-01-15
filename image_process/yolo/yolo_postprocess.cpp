@@ -60,7 +60,9 @@ YoloPostProcess::YoloPostProcess(const ai_framework::Config &config,
       config.output_layer_shape.at(config.output_index_to_name.at(0));
   dfl_len_ = output_boxes_shape.at(1) / 4;
   auto output_boxes_name = config.output_index_to_name.at(0);
-  if (ContainsSubString(output_boxes_name, "yolov10")) {
+  if (ContainsSubString(output_boxes_name, "yolo26_detect")) {
+    model_type_ = ModelType::DETECTION_V26;
+  } else if (ContainsSubString(output_boxes_name, "yolov10")) {
     model_type_ = ModelType::DETECTION_V10;
   } else if (ContainsSubString(output_boxes_name, "yolov8_detect")) {
     model_type_ = ModelType::DETECTION_V8;
@@ -89,6 +91,7 @@ void YoloPostProcess::Run(void **&tensors) {
   obj_probs_.clear();
   bboxes_idx_.clear();
   if (model_type_ == ModelType::DETECTION_V8 ||
+      model_type_ == ModelType::DETECTION_V26 ||
       model_type_ == ModelType::DETECTION_V10 ||
       model_type_ == ModelType::DETECTION_V11 ||
       model_type_ == ModelType::DETECTION_V13 ||
@@ -303,7 +306,8 @@ void YoloPostProcess::PostProcessDetectSegment(void **&tensors) {
       }
       n = indexArray[i];
       res.model_type = model_type_;
-    } else if (model_type_ == ModelType::DETECTION_V10) {
+    } else if (model_type_ == ModelType::DETECTION_V10 ||
+               model_type_ == ModelType::DETECTION_V26) {
       n = i;
       res.model_type = model_type_;
     }
@@ -620,12 +624,20 @@ uint16_t YoloPostProcess::ProcessDetect(const void *box_tensor,
           }
           offset += grid_len;
         }
-        compute_dfl(before_dfl, dfl_len_, box);
         Bbox _bbox;
-        _bbox.x1 = (-box[0] + j + 0.5) * stride;
-        _bbox.y1 = (-box[1] + i + 0.5) * stride;
-        _bbox.x2 = (box[2] + j + 0.5) * stride;
-        _bbox.y2 = (box[3] + i + 0.5) * stride;
+        if (model_type_ == ModelType::DETECTION_V26 ||
+            model_type_ == ModelType::DETECTION_V10) {
+          _bbox.x1 = (-before_dfl[0] + j + 0.5) * stride;
+          _bbox.y1 = (-before_dfl[1] + i + 0.5) * stride;
+          _bbox.x2 = (before_dfl[2] + j + 0.5) * stride;
+          _bbox.y2 = (before_dfl[3] + i + 0.5) * stride;
+        } else {
+          compute_dfl(before_dfl, dfl_len_, box);
+          _bbox.x1 = (-box[0] + j + 0.5) * stride;
+          _bbox.y1 = (-box[1] + i + 0.5) * stride;
+          _bbox.x2 = (box[2] + j + 0.5) * stride;
+          _bbox.y2 = (box[3] + i + 0.5) * stride;
+        }
         int width_pixel_delta = 1;
         int height_pixel_delta = 1;
         if (model_type_ == ModelType::SEGMENT_V11) {

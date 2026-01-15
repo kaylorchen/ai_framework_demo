@@ -65,39 +65,42 @@ target_link_libraries(depth_camera_demo depth_image_process ${LINKS} ${AI_LIB})
 add_executable(inference_test inference_without_preprocess_postprocess/main.cpp)
 target_link_libraries(inference_test ${LINKS} ${AI_LIB})
 
-# 检查架构
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "i386")
-    set(IS_X86_ARCH TRUE)
-else()
-    set(IS_X86_ARCH FALSE)
-endif()
+if (DEFINED RK3588)
+    message(STATUS "Not RK3588")
+    # 检查架构
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "i386")
+        set(IS_X86_ARCH TRUE)
+    else()
+        set(IS_X86_ARCH FALSE)
+    endif()
 
-if(EXISTS "/home/kaylor/work/pcl/1.15.1/share/pcl-1.15" AND IS_X86_ARCH)
-    set(PCL_DIR "/home/kaylor/work/pcl/1.15.1/share/pcl-1.15")
-    message(STATUS "Found PCL path: ${PCL_DIR}")
-elseif (EXISTS "/home/kaylor/work/pcl/1.15.1-arm64/share/pcl-1.15")
-    set(PCL_DIR "/home/kaylor/work/pcl/1.15.1-arm64/share/pcl-1.15")
-    message(STATUS "Found PCL path: ${PCL_DIR}")
-else()
-    message(WARNING "PCL path not found: /home/kaylor/work/pcl/1.15.1/share/pcl-1.15")
-endif()
-find_package(PCL REQUIRED COMPONENTS)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-message(STATUS "PCL_INCLUDE_DIRS is ${PCL_INCLUDE_DIRS}")
-message(STATUS "PCL_LIBRARY_DIRS is ${PCL_LIBRARY_DIRS}")
+    if(EXISTS "/home/kaylor/work/pcl/1.15.1/share/pcl-1.15" AND IS_X86_ARCH)
+        set(PCL_DIR "/home/kaylor/work/pcl/1.15.1/share/pcl-1.15")
+        message(STATUS "Found PCL path: ${PCL_DIR}")
+    elseif (EXISTS "/home/kaylor/work/pcl/1.15.1-arm64/share/pcl-1.15")
+        set(PCL_DIR "/home/kaylor/work/pcl/1.15.1-arm64/share/pcl-1.15")
+        message(STATUS "Found PCL path: ${PCL_DIR}")
+    else()
+        message(WARNING "PCL path not found: /home/kaylor/work/pcl/1.15.1/share/pcl-1.15")
+    endif()
+    find_package(PCL REQUIRED COMPONENTS)
+    include_directories(${PCL_INCLUDE_DIRS})
+    link_directories(${PCL_LIBRARY_DIRS})
+    add_definitions(${PCL_DEFINITIONS})
+    message(STATUS "PCL_INCLUDE_DIRS is ${PCL_INCLUDE_DIRS}")
+    message(STATUS "PCL_LIBRARY_DIRS is ${PCL_LIBRARY_DIRS}")
 
-add_executable(foundation_stereo
-        stereo/src/main_read_files.cpp
-        stereo/src/stereo_image_process.cpp
-        stereo/src/image_padder.cpp)
-target_link_libraries(foundation_stereo ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
+    add_executable(foundation_stereo
+            stereo/src/main_read_files.cpp
+            stereo/src/stereo_image_process.cpp
+            stereo/src/image_padder.cpp)
+    target_link_libraries(foundation_stereo ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
 
-add_executable(foundation_stereo_zed
-        stereo/src/main_zed.cpp
-        stereo/src/stereo_image_process.cpp
-        stereo/src/image_padder.cpp
-        stereo/src/display_cloud.cpp
-)
-target_link_libraries(foundation_stereo_zed ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
+    add_executable(foundation_stereo_zed
+            stereo/src/main_zed.cpp
+            stereo/src/stereo_image_process.cpp
+            stereo/src/image_padder.cpp
+            stereo/src/display_cloud.cpp
+    )
+    target_link_libraries(foundation_stereo_zed ${LINKS} ${AI_LIB} ${PCL_LIBRARIES})
+endif ()

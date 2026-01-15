@@ -18,6 +18,8 @@ double get_now() {
 
 int main(int argc, char** argv){
   YAML::Node model_config = YAML::LoadFile("../config/yolo.yaml");
+  int thread_num = model_config["thread_num"].as<int>();
+  bool cv_show = model_config["cv_show"].as<bool>();
   auto model_path = model_config["model_path"].as<std::string>();
   auto video_path = model_config["video_path"].as<std::string>();
   auto fps = model_config["video_play_fps"].as<float>();
@@ -31,7 +33,7 @@ int main(int argc, char** argv){
     labels.push_back(kv.first.as<std::string>());
     confidence_thresholds.push_back(kv.second["confidence_threshold"].as<float>());
   }
-  YoloThreadpool yolo_threadpool(model_path, confidence_thresholds, 6);
+  YoloThreadpool yolo_threadpool(model_path, confidence_thresholds, thread_num);
   std::vector<cv::Mat> input(1);
   VideoFile video_file(video_path);
   input.at(0) = video_file.GetNextFrame();
@@ -61,7 +63,8 @@ int main(int argc, char** argv){
             "ShowResults()",
             ShowResults(result->original_image.at(0),
                         yolo_threadpool.get_model_input_side_length(),
-                        result->results, labels, 1, false, false, false, true));
+                        result->results, labels, 1, false, false, false,
+                        cv_show));
         ++result_count;
         lost_count = 0;
       } else {
