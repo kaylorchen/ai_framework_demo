@@ -65,6 +65,9 @@ target_link_libraries(depth_camera_demo depth_image_process ${LINKS} ${AI_LIB})
 add_executable(inference_test inference_without_preprocess_postprocess/main.cpp)
 target_link_libraries(inference_test ${LINKS} ${AI_LIB})
 
+add_executable(model_test inference_without_preprocess_postprocess/model_test.cpp)
+target_link_libraries(model_test ${LINKS} ${AI_LIB})
+
 if (DEFINED RK3588)
     message(STATUS "Not RK3588")
     # 检查架构
