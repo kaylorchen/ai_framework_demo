@@ -70,6 +70,85 @@ apt install -y ai-instance=xxxxx-nnrt # if your device is AI Pro, select nnrt ve
 > Jetson(Orin) device: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/arm64/cuda-keyring_1.1-1_all.deb  
 > RTX device: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb  
 
+### install CUDA Toolkit
+
+Install the CUDA toolkit **matching your driver's CUDA version**. Use the `cuda-toolkit-X-Y` meta-package which pulls in compiler, libraries, and tools all at once.
+
+**Step 1: check your CUDA version**
+```bash
+nvidia-smi | grep "CUDA Version"
+# Example output: CUDA Version: 13.0
+```
+
+**Step 2: find the matching toolkit package**
+```bash
+apt list -a cuda-toolkit 2>/dev/null | grep "cuda-toolkit-"
+```
+
+**Step 3: install (replace `13-0` with your version)**
+```bash
+# Example for CUDA 13.0:
+sudo apt install -y cuda-toolkit-13-0
+```
+
+> **Version reference (current as of writing):**  
+> - CUDA 12.6 → `cuda-toolkit-12-6`  
+> - CUDA 12.9 → `cuda-toolkit-12-9`  
+> - CUDA 13.0 → `cuda-toolkit-13-0`  
+> - CUDA 13.2 → `cuda-toolkit-13-2`  
+>
+> The major.minor version must match, e.g. CUDA 13.0 → `cuda-toolkit-13-0`.
+
+### install libnvinfer (TensorRT runtime + dev)
+
+Before installing `ai-instance` (tensorrt version), you need the following packages:
+
+| Package | Purpose |
+|---|---|
+| `libnvinfer10` | TensorRT runtime library |
+| `libnvinfer-plugin10` | TensorRT plugin runtime |
+| `libnvinfer-dev` | TensorRT development library |
+| `libnvinfer-plugin-dev` | TensorRT plugin development library |
+| `libnvinfer-headers-dev` | TensorRT development headers |
+| `libnvinfer-headers-plugin-dev` | TensorRT plugin development headers |
+
+**The version MUST match your CUDA version** — the package version string includes the CUDA suffix (e.g. `cuda13.0`).
+
+**Step 1: check your CUDA version**
+```bash
+nvcc --version 2>/dev/null || nvidia-smi | grep "CUDA Version"
+# Example output: CUDA Version: 13.0
+```
+
+**Step 2: find matching nvinfer packages**
+```bash
+apt list -a libnvinfer10 2>/dev/null | grep "cuda$(nvcc --version | grep -oP 'Cuda compilation tools, release \K[0-9]+\.[0-9]+' || nvidia-smi | grep -oP 'CUDA Version: \K[0-9]+\.[0-9]+')"
+```
+
+**Step 3: install (replace the version with yours, all 6 packages share the same version)**
+```bash
+# Example for CUDA 13.0:
+sudo apt install -y \
+  libnvinfer10=10.14.1.48-1+cuda13.0 \
+  libnvinfer-plugin10=10.14.1.48-1+cuda13.0 \
+  libnvinfer-dev=10.14.1.48-1+cuda13.0 \
+  libnvinfer-plugin-dev=10.14.1.48-1+cuda13.0 \
+  libnvinfer-headers-dev=10.14.1.48-1+cuda13.0 \
+  libnvinfer-headers-plugin-dev=10.14.1.48-1+cuda13.0
+
+# After installation, hold the packages to prevent accidental upgrade:
+sudo apt-mark hold \
+  libnvinfer10 libnvinfer-plugin10 \
+  libnvinfer-dev libnvinfer-plugin-dev \
+  libnvinfer-headers-dev libnvinfer-headers-plugin-dev
+```
+
+> **Version reference (current as of writing):**  
+> - CUDA 13.0 → all 6 packages at `10.14.1.48-1+cuda13.0`  
+> - CUDA 13.2 → all 6 packages at `10.16.1.11-1+cuda13.2`  
+> 
+> Run `apt list -a libnvinfer10 2>/dev/null | grep libnvinfer10` to see all available versions for your system.
+
 
 # TEST
 
